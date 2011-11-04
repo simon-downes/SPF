@@ -1,0 +1,55 @@
+<?php
+
+namespace spf\view;
+
+abstract class View {
+   
+   protected $profiler;
+   
+   protected $data = array();
+   
+   public function add_service( $name, $service ) {
+      if( property_exists($this, $name) )
+         $this->$name = $service;
+      else
+         throw new Exception(get_class($this). " has no service property '{$name}'");
+   }
+   
+   /**
+    * Assign a variable to the view.
+    *
+    * @param   string    $var   the name of the variable.
+    * @param   mixed     $val   the value of the variable.
+    * @return  void
+    */
+   public function assign( $var, $value ) {
+      $this->data[$var] = $value;
+   }
+   
+   /**
+    * Determines whether a specified view exists.
+    *
+    * @param   string    $view   the view to check for.
+    * @return  boolean
+    */
+   abstract public function exists( $view );
+   
+   /**
+    * Displays the specified view.
+    *
+    * @param   string    $view   the view to display.
+    * @return  void
+    */
+   abstract public function display( $view );
+
+   /**
+    * Returns the view output.
+    *
+    * @param   string    $view   the view whose output to fetch.
+    * @return  string
+    */
+   abstract public function fetch( $view );
+   
+}
+
+// EOF
