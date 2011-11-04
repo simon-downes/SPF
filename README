@@ -1,0 +1,13 @@
+--------------------------------------------------------------------------------
+Si's PHP Framework
+--------------------------------------------------------------------------------
+
+A simple, fast and flexible framework for PHP 5.3+
+
+SPF utilises the latest PHP 5.3 features, including namespaces, late static
+binding and closures. It aims to enable the rapid development of web
+applications by providing a set of pre-wired, common components that are easily
+swappable depending on the needs of the project.
+
+Each component of the framwork can be used stand-alone; great for quick
+prototypes and proof-of-concepts.
