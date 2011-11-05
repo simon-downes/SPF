@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of SPF.
+ *
+ * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * 
+ * Distributed under the MIT License, a copy of which is available in the
+ * LICENSE file that was bundled with this package, or online at:
+ * https://github.com/simon-downes/spf
+ */
 
 namespace spf\app;
 
@@ -16,9 +25,10 @@ class Config {
       $config = array(
          'app.auto_route' => true,
          'app.routes' => array(
-            '/' => 'DefaultController/index'
+            '/' => 'IndexController/index'
          ),
-         'logs.error' => 'php',
+         'databases' => array(),
+         'logs' => array(),
       );
       
       include($file);

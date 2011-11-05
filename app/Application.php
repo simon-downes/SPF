@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of SPF.
+ *
+ * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * 
+ * Distributed under the MIT License, a copy of which is available in the
+ * LICENSE file that was bundled with this package, or online at:
+ * https://github.com/simon-downes/spf
+ */
 
 namespace spf\app;
 
@@ -59,19 +68,23 @@ class Application {
       if( file_exists(SPF_APP_PATH. "/config/{$config}") )
          $this->context['config']->load(SPF_APP_PATH. "/config/{$config}");
       
-      foreach( $context['config']->get('logs') as $name => $source ) {
-         if( !isset($context["log.{$name}"]) ) {
-            $context["log.{$name}"] = $context->share(function( $context ) use ($source) {
-               return $context['logs']->create($source);
-            });
+      if( $logs = $context['config']->get('logs') ) {
+         foreach( $logs as $name => $source ) {
+            if( !isset($context["log.{$name}"]) ) {
+               $context["log.{$name}"] = $context->share(function( $context ) use ($source) {
+                  return $context['logs']->create($source);
+               });
+            }
          }
       }
       
-      foreach( $context['config']->get('databases') as $name => $config ) {
-         if( !isset($context["db.{$name}"]) ) {
-            $context["db.{$name}"] = $context->share(function( $context ) use ($name, $config) {
-               return $context['databases']->create($config);
-            });
+      if( $databases = $context['config']->get('databases') ) {
+         foreach( $databases as $name => $config ) {
+            if( !isset($context["db.{$name}"]) ) {
+               $context["db.{$name}"] = $context->share(function( $context ) use ($name, $config) {
+                  return $context['databases']->create($config);
+               });
+            }
          }
       }
       

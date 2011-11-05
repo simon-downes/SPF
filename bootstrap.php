@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of SPF.
+ *
+ * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * 
+ * Distributed under the MIT License, a copy of which is available in the
+ * LICENSE file that was bundled with this package, or online at:
+ * https://github.com/simon-downes/spf
+ */
 
 error_reporting(E_ALL | E_STRICT);
 
@@ -20,9 +29,13 @@ require SPF_PATH. '/core/Autoloader.php';
 
 // framework class map - not technically needed but here for a little performance boost
 \spf\core\Autoloader::add_classes( array(
+   'Pimple'                      => SPF_LIBS_PATH. '/pimple/lib/Pimple.php',
+   
    'spf\\core\\BaseFactory'      => SPF_PATH. '/core/BaseFactory.php',
+   'spf\\core\\Collection'       => SPF_PATH. '/core/Collection.php',
    'spf\\core\\Container'        => SPF_PATH. '/core/Container.php',
    'spf\\core\\ErrorException'   => SPF_PATH. '/core/ErrorException.php',
+   'spf\\core\\EventManager'     => SPF_PATH. '/core/EventManager.php',
    'spf\\core\\Exception'        => SPF_PATH. '/core/Exception.php',
    'spf\\core\\Factory'          => SPF_PATH. '/core/Factory.php',
    
