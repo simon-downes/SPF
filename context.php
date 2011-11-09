@@ -15,6 +15,10 @@ $context['collection'] = function ( $context ) {
    return new \spf\core\Collection();
 };
 
+$context['events'] = $context->share(function( $context ) {
+   return new \spf\core\EventManager();
+});
+
 $context['config'] = $context->share(function( $context ) {
    return new \spf\app\Config();
 });
@@ -33,12 +37,12 @@ $context['response'] = $context->share(function( $context ) {
       return new \spf\app\web\Response();
 });
 
-$context['validator'] = $context->share(function( $context ) {
-   return new \spf\util\Validator();
+$context['router'] = $context->share(function( $context ) {
+   return new \spf\app\Router();
 });
 
-$context['events'] = $context->share(function( $context ) {
-   return new \spf\core\EventManager();
+$context['validator'] = $context->share(function( $context ) {
+   return new \spf\util\Validator();
 });
 
 $context['profiler'] = $context->share(function( $context ) {

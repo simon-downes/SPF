@@ -96,8 +96,9 @@ class Router {
       // closure - function()
       elseif( is_callable($callback) && is_object($callback) )    {
          return array(
-            'type'   => static::CALLBACK_CLOSURE,
-            'action' => $callback
+            'type'       => static::CALLBACK_CLOSURE,
+            'controller' => null,
+            'action'     => $callback
          );
       }
       

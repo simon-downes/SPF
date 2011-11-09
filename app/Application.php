@@ -91,61 +91,48 @@ class Application {
    } // init
    
    public function dispatch( $request ) {
-   
-      $uri        = $request->uri();
-      $controller = $action = '';
-      $parameters = array();
-      $routes     = $this->context['config']->get('app.routes');
       
-      if( !$routes )
-         throw new Exception('No Routes Defined');    // should always have at least a default route
-      
-      // routes that don't use parameters should match directly
-      if( isset($routes[$uri]) ) {
-	      list($controller, $action) = explode('/', $routes[$uri]);
-      }
-      else {
-         // try and match the uri against a defined route
-         foreach( $routes as $route => $target ) {
-			   if( preg_match(":^{$route}$:", $uri, $parameters) ) {
-			      list($controller, $action) = explode('/', $target);
-			      array_shift($parameters);  // first element is the complete string, we only care about the sub-matches
-				   break;
-			   }
-		   }
-		   
-		   // no match so try autorouting - /controller/action/param1/.../paramN
-		   if( !$controller && $this->context['config']->get('app.auto_route') ) {
-		      $parameters = explode('/', ltrim($uri, '/'));
-		      $controller = isset($parameters[0]) ? ucfirst(array_shift($parameters)). 'Controller' : '';
-		      $action     = isset($parameters[0]) ? array_shift($parameters) : 'index';
-		   }
+      foreach( $this->context['config']->get('app.routes') as $regex => $callback ) {
+         $this->context['router']->add_route($regex, $callback);
       }
       
-      if( $controller && $action ) {
-         
-         $request->set_route( compact('controller', 'action', 'parameters') );
-         
-         $controller = $this->context['controllers']->create($controller);
-         
-         if( !method_exists($controller, $action) ) {
-            $class = get_class($controller);
-            throw new Exception("Not Implemented: \\{$class}::{$action}()");
-         }
-         
-         $controller->before();
-         
-         $method = new \ReflectionMethod($controller, $action);
-         $response = $method->invokeArgs($controller, $parameters);
-         
-         $controller->after();
-         
-         return $response;
-         
+      if( $this->context['config']->get('app.auto_route') )
+         $this->context['router']->auto_route();
+      
+      $route = $this->context['router']->match($request->uri());
+      
+      if( !$route )
+         throw new NotFoundException($reqiest->uri());
+      
+      $request->set_route($route);
+      
+      switch( $route['type'] ) {
+         case Router::CALLBACK_CLASS:
+            $route['controller'] = $this->context['controllers']->create($route['controller']);
+            
+         case Router::CALLBACK_OBJECT:
+            
+            if( !method_exists($route['controller'], $route['action']) ) {
+               $class = get_class($route['controller']);
+               throw new Exception("Not Implemented: \\{$class}::{$route['action']}()");
+            }
+            
+            $route['controller']->before();
+            
+            $method = new \ReflectionMethod($route['controller'], $route['action']);
+            $response = $method->invokeArgs($route['controller'], $route['parameters']);
+            
+            $route['controller']->after();
+            
+            break;
+            
+         case Router::CALLBACK_CLOSURE:
+            $callback = new \ReflectionFunction($route['action']);
+            $response = $callback->invokeArgs($route['parameters']);
+            break;
       }
       
-      // no matching route so 404
-      throw new NotFoundException($uri);
+      return $response;
       
    } // dispatch
    
