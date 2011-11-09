@@ -200,6 +200,8 @@ abstract class Database {
    public function rollback() {
       if( !$this->is_connected() )
          throw new Exception('Database Not Connected');
+      if( !$this->pdo->inTransaction() )
+         throw new Exception('No Active Transaction');
       return $this->pdo->rollBack();
    }
    
@@ -210,7 +212,7 @@ abstract class Database {
    public function insert_id() {
       if( !$this->is_connected() )
          throw new Exception('Database Not Connected');
-      return $this->pdo->lastInsertId;
+      return $this->pdo->lastInsertId();
    }
 
    /**

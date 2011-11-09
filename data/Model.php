@@ -105,7 +105,6 @@ class Model {
    
       $this->errors = array();
       
-      // create a new property for each column in the table and assign a default value
       foreach( $this->columns as &$column ) {
          $this->{$column->name} = $column->has_default ? $column->default_value : null;
       }
@@ -192,7 +191,6 @@ class Model {
          foreach( $this->primary_key as $column ) {
             if( $this->columns[$column]->auto_increment ) {
                $this->$column = $this->db->insert_id();
-               d('New ID: '. $this->$column);
                break;
             }
          }
@@ -207,7 +205,23 @@ class Model {
    } // save
    
    public function delete() {
-   
+      
+      $sql = "DELETE
+                FROM {$this->table_name}
+               WHERE ". $this->build_primary_key_clause();
+               
+      $params = $this->build_primary_key_params( func_get_args() );
+      
+      // run the before_delete hook and cancel the delete depending the return value
+      //if( $cancel = $this->before_delete($params) )
+      //   return false;
+      
+      $statement = $this->db->query($sql, $params);
+      
+      //$this->after_delete($params);
+      
+      return $statement->rowCount();
+      
    }
    
    public function is_dirty( $column_name = '' ) {
@@ -261,8 +275,51 @@ class Model {
       
    }
    
-   public function add_validation() {
-   
+   public function add_validation( $column_name, $data_type, $required = false, $unique = false ) {
+      
+      // TODO: accept callback for validation
+      
+      if( !isset($this->columns[$column_name]) )
+         throw new Exception('Unknown column: '. $column_name);
+      
+      // get the optional dynamic parameters
+      $args = func_get_args();
+      array_shift($args);
+      array_shift($args);
+      array_shift($args);
+      array_shift($args);
+      
+      $rule = array('data_type' => $data_type,
+                    'required'  => $required,
+                    'unique'    => $unique);
+
+      switch( $data_type ) {
+         case 'alpha':
+         case 'alphanumeric':
+            $rule['extra_chars'] = isset($args[0]) ? (string) $args[0] : null;
+            $rule['min_length']  = isset($args[1]) ? (int) $args[1] : null;
+            $rule['max_length']  = isset($args[2]) ? (int) $args[2] : null;
+            break;
+            
+         case 'numeric':
+         case 'integer':
+         case 'float':
+         case 'date':
+            $rule['min'] = isset($args[0]) ? $args[0] : null;
+            $rule['max'] = isset($args[1]) ? $args[1] : null;
+            break;
+         
+         case 'email':
+         case 'name':
+         case 'lookup':
+         case 'postcode':
+            // no optional parameters for these datatypes
+            break;
+      
+      }
+      
+      $this->columns[$column_name]->validation = $rule;
+      
    }
    
    public function has_errors() {
