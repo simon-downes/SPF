@@ -15,7 +15,7 @@ class File extends \spf\storage\Cache {
    
    protected $directory;
    
-   public function __construct( $dir = SPF_CACHE_PATH ) {
+   public function __construct( $directory = SPF_CACHE_PATH ) {
       
       if( !file_exists($directory) )
          throw new Exception("Cache directory '{$directory}' doesn't exist");
@@ -23,13 +23,13 @@ class File extends \spf\storage\Cache {
       if( !is_writable($directory) )
          throw new Exception("Cache directory '{$directory}' is not writeable");
       
-      $this->directory = $directory
+      $this->directory = $directory;
       
    }
    
    public function read( $key ) {
       
-      $key   = $this->directory. $this->key($key);
+      $key   = $this->directory. '/'. $this->key($key);
       $value = null;
       
       if( file_exists($key) ) {
@@ -50,7 +50,7 @@ class File extends \spf\storage\Cache {
    
    public function write( $key, $value, $expiry = 0 ) {
       
-      $key   = $this->directory. $this->key($key);
+      $key   = $this->directory. '/'. $this->key($key);
       $value = serialize($value);
       
       if( !$expiry ) {
@@ -60,7 +60,7 @@ class File extends \spf\storage\Cache {
          $expiry = strtotime($expiry);
       }
       else {
-         $expiry = str_pad((int) $expiry, 10, '0', STR_PAD_LEFT);
+         $expiry = str_pad(time() + (int) $expiry, 10, '0', STR_PAD_LEFT);
       }
       
       return file_put_contents($key, $expiry. $value, LOCK_EX);
@@ -69,7 +69,7 @@ class File extends \spf\storage\Cache {
    
    public function delete( $key ) {
       
-      $key = $this->directory. $this->key($key);
+      $key = $this->directory. '/'. $this->key($key);
       
       if( file_exists($key) ) {
          unlink($key);
@@ -85,8 +85,8 @@ class File extends \spf\storage\Cache {
       $dh = opendir($this->directory);
       
       while( ($item = readdir($dh)) !== false ) {
-         if( is_file($this->directory. $item) )
-            unlink($this->directory. $item);
+         if( is_file($this->directory. '/'. $item) )
+            unlink($this->directory. '/'. $item);
       }
       
       return true;
@@ -94,7 +94,7 @@ class File extends \spf\storage\Cache {
    }
    
    protected function key( $key ) {
-      if( preg_match("/[a-z0-9_-+.$&*]+/i", $key) )
+      if( preg_match("/[a-z0-9_\-+.$&*]+/i", $key) )
          return $key;
       else
          return sha1($key);

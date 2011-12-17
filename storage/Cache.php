@@ -15,7 +15,7 @@ abstract class Cache {
    
    abstract public function read( $key );
    
-   abstract public function write( $key, $value, $expires = null );
+   abstract public function write( $key, $value, $expires = 0 );
    
    abstract public function delete( $key );
    
