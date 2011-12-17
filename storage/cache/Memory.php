@@ -9,9 +9,9 @@
  * https://github.com/simon-downes/spf
  */
 
-namespace spf\storage;
+namespace spf\storage\cache;
 
-class Memory extends Cache {
+class Memory extends \spf\storage\Cache {
    
    protected $store;
    
@@ -28,7 +28,7 @@ class Memory extends Cache {
       return true;
    }
    
-   public function delete() {
+   public function delete( $key ) {
       unset($this->store[$key]);
       return true;
    }

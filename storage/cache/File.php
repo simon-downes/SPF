@@ -11,7 +11,7 @@
 
 namespace spf\storage\cache;
 
-class File extends Cache {
+class File extends \spf\storage\Cache {
    
    protected $directory;
    
@@ -48,7 +48,7 @@ class File extends Cache {
       
    }
    
-   public function write( $key, $value, $expiry = null ) {
+   public function write( $key, $value, $expiry = 0 ) {
       
       $key   = $this->directory. $this->key($key);
       $value = serialize($value);
