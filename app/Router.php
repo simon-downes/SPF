@@ -31,8 +31,8 @@ class Router {
       return $this;
    }
    
-   public function match( $uri ) {
-
+   public function match( $uri, $request_method = 'GET' ) {
+      
       $route = false;
             
       if( !$this->routes )
@@ -49,25 +49,40 @@ class Router {
          
          // try and match the uri against a defined route
          foreach( $this->routes as $regex => $callback ) {
-			   if( preg_match(":^{$regex}$:", $uri, $parameters) ) {
-			      $route = $this->decode($callback);
-			      array_shift($parameters);  // first element is the complete string, we only care about the sub-matches
-			      $route['parameters'] = $parameters;
-				   break;
-			   }
-		   }
-		   
-		   // no match so try autorouting - /controller/action/param1/.../paramN
-		   if( !$route && $this->auto_route ) {
-		      $parameters = explode('/', ltrim($uri, '/'));
-		      $route = array(
-		         'type'       => static::CALLBACK_CLASS,
-		         'controller' => isset($parameters[0]) ? ucfirst(array_shift($parameters)). 'Controller' : '',
-		         'action'     => isset($parameters[0]) ? array_shift($parameters) : 'index',
-		         'parameters' => $parameters
-		      );
-		   }
-		   
+
+            // all methods allowed by default
+            $methods = array('GET', 'POST', 'PUT', 'DELETE');
+
+            // check if route has allowed methods specified
+            if( preg_match('/^\((GET|POST|PUT|DELETE|\|)+\):/i', $regex) ) {
+               list($methods, $regex) = explode(':', $regex, 2);
+               $methods = explode('|', trim($methods, '()'));
+            }
+
+            // check request_method is in list of allowed methods for this route
+            if( !in_array($request_method, $methods) )
+               continue;
+
+            if( preg_match(":^{$regex}$:", $uri, $parameters) ) {
+               $route = $this->decode($callback);
+               array_shift($parameters);  // first element is the complete string, we only care about the sub-matches
+               $route['parameters'] = $parameters;
+               break;
+            }
+            
+         }
+         
+         // no match so try autorouting - /controller/action/param1/.../paramN
+         if( !$route && $this->auto_route ) {
+         $parameters = explode('/', ltrim($uri, '/'));
+            $route = array(
+               'type'       => static::CALLBACK_CLASS,
+               'controller' => isset($parameters[0]) ? ucfirst(array_shift($parameters)). 'Controller' : '',
+               'action'     => isset($parameters[0]) ? array_shift($parameters) : 'index',
+               'parameters' => $parameters
+            );
+         }
+         
       }
       
       return $route;

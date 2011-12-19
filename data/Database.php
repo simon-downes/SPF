@@ -22,7 +22,7 @@ abstract class Database {
    
    protected $pdo = null;                    // underlying PDO connection
    
-   protected $queries = array();             // array of query profile info (tag => duration)
+   protected $statements = array();          // array of prepared statements
    
    public function __construct( $config ) {
       
@@ -95,8 +95,12 @@ abstract class Database {
       if( !$this->is_connected() )
          $this->connect();
       
-      if( ! $statement instanceof \PDOStatement  )
-         $statement = $this->pdo->prepare($statement);
+      if( ! $statement instanceof \PDOStatement  ) {
+			$statement = trim($statement);
+			if( !isset($this->statements[$statement]) )
+				$this->statements[$statement] = $this->pdo->prepare($statement);
+			$statement = $this->statements[$statement];
+      }
       
       // single parameters don't have to be passed in an array - do that here
       if( !is_array($params) )
@@ -125,7 +129,7 @@ abstract class Database {
    } // query
    
    public function execute( $statement, $params = array() ) {
-      $statement = $this->query();
+      $statement = $this->query($statement, $params);
       return $statement->rowCount();
    }
    

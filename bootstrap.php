@@ -86,8 +86,13 @@ set_error_handler(
 // fallback exception handler - catches errors/exceptions outside of the try/catch block in Application::run()
 set_exception_handler(
    function( $error ) {
-      header("HTTP/1.0 503 Internal Server Error");
-      include SPF_PATH. '/view/exceptions/default.php';
+      if( SPF_CLI ) {
+         d($error);
+      }
+      else {
+         header("HTTP/1.0 503 Internal Server Error");
+         include SPF_PATH. '/view/exceptions/default.php';      
+      }
    }
 );
 
@@ -96,7 +101,7 @@ register_shutdown_function(
    function() {
       $flags = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;   // fatal error flags
       $fatal = ($error = error_get_last()) && ($flags & $error['type']);
-      if( $fatal ) {
+      if( $fatal && !SPF_CLI ) {
          header("HTTP/1.0 503 Internal Server Error");
          include SPF_PATH. '/view/exceptions/default.php';
       }
