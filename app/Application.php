@@ -13,7 +13,7 @@ namespace spf\app;
 
 class Application {
    
-   protected $context = null;
+   protected $services = null;
    
    public function __construct( $path, $namespace ) {
       
@@ -35,14 +35,14 @@ class Application {
          
          $this->init( $config );
          
-         $this->dispatch($this->context['request']);
+         $this->dispatch($this->services['request']);
          
-         //$this->context['response']->send();
+         //$this->services['response']->send();
          
       }
       catch( \Exception $e ) {
          
-         /*$this->context['response']
+         /*$this->services['response']
             ->status(500, $e->getMessage())
             ->body($e->getMessage())
             ->send();*/
@@ -55,34 +55,34 @@ class Application {
    
    public function init( $config ) {
       
-      include SPF_PATH. '/context.php';    // default dependencies
+      include SPF_PATH. '/services.php';    // default dependencies
       
-      if( file_exists(SPF_APP_PATH. '/context.php') )    // application-specific dependencies
-         include SPF_APP_PATH. '/context.php';
+      if( file_exists(SPF_APP_PATH. '/services.php') )    // application-specific dependencies
+         include SPF_APP_PATH. '/services.php';
       
-      if( !($context instanceof \Pimple) )
-         throw new Exception('Invalid Application Context');
+      if( !($services instanceof \spf\core\Container) )
+         throw new Exception('Invalid Framework Services');
       
-      $this->context = $context;
+      $this->services = $services;
       
       if( file_exists(SPF_APP_PATH. "/config/{$config}") )
-         $this->context['config']->load(SPF_APP_PATH. "/config/{$config}");
+         $this->services['config']->load(SPF_APP_PATH. "/config/{$config}");
       
-      if( $logs = $context['config']->get('logs') ) {
+      if( $logs = $services['config']->get('logs') ) {
          foreach( $logs as $name => $source ) {
-            if( !isset($context["log.{$name}"]) ) {
-               $context["log.{$name}"] = $context->share(function( $context ) use ($source) {
-                  return $context['logs']->create($source);
+            if( !isset($services["log.{$name}"]) ) {
+               $services["log.{$name}"] = $services->share(function( $services ) use ($source) {
+                  return $services['logs']->create($source);
                });
             }
          }
       }
       
-      if( $databases = $context['config']->get('databases') ) {
+      if( $databases = $services['config']->get('databases') ) {
          foreach( $databases as $name => $config ) {
-            if( !isset($context["db.{$name}"]) ) {
-               $context["db.{$name}"] = $context->share(function( $context ) use ($name, $config) {
-                  return $context['databases']->create($config);
+            if( !isset($services["db.{$name}"]) ) {
+               $services["db.{$name}"] = $services->share(function( $services ) use ($name, $config) {
+                  return $services['databases']->create($config);
                });
             }
          }
@@ -92,14 +92,14 @@ class Application {
    
    public function dispatch( $request ) {
       
-      foreach( $this->context['config']->get('app.routes') as $regex => $callback ) {
-         $this->context['router']->add_route($regex, $callback);
+      foreach( $this->services['config']->get('app.routes') as $regex => $callback ) {
+         $this->services['router']->add_route($regex, $callback);
       }
       
-      if( $this->context['config']->get('app.auto_route') )
-         $this->context['router']->auto_route();
+      if( $this->services['config']->get('app.auto_route') )
+         $this->services['router']->auto_route();
       
-      $route = $this->context['router']->match($request->uri());
+      $route = $this->services['router']->match($request->uri());
       
       if( !$route )
          throw new NotFoundException($reqiest->uri());
@@ -108,7 +108,7 @@ class Application {
       
       switch( $route['type'] ) {
          case Router::CALLBACK_CLASS:
-            $route['controller'] = $this->context['controllers']->create($route['controller']);
+            $route['controller'] = $this->services['controllers']->create($route['controller']);
             
          case Router::CALLBACK_OBJECT:
             

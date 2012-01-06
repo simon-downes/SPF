@@ -18,12 +18,25 @@ class Request extends \spf\app\Request {
 	protected $cookies;     // array of request cookies
 	protected $files;       // array of uploaded files
 	
-	public function __construct( $get, $post, $cookies, $files, $server ) {
-		
-	   $this->method = $_SERVER['REQUEST_METHOD'];
-	   
+   public function __construct( $get, $post, $cookies, $files, $server ) {
+   	
+	   // support method overriding via _method url parameter
+      if( isset($get['_method']) && $get['_method'] ) {
+         $this->method = $get['_method'];
+      }
+      // support method overriding via X-HTTP-Method-Override header
+      elseif( isset($server['HTTP_X_HTTP_METHOD_OVERRIDE']) && $server['HTTP_X_HTTP_METHOD_OVERRIDE'] ) {
+         $this->method = $server['HTTP_X_HTTP_METHOD_OVERRIDE'];
+      }
+      elseif( isset($server['REQUEST_METHOD']) ) {
+         $this->method = $server['REQUEST_METHOD'];
+      }
+      else {
+         $this->method = 'GET';
+      }
+      
       // path the user actually requested minus the path to the application and any query string part
-      $uri = preg_replace(':^'. preg_quote(SPF_WEB_PATH). ':', '', $_SERVER['REQUEST_URI']);
+      $uri = preg_replace(':^'. preg_quote(SPF_WEB_PATH). ':', '', $server['REQUEST_URI']);
       $uri = '/'. trim(preg_replace(':\?.*:', '', $uri), '/');
       
 	   // load data
@@ -47,7 +60,7 @@ class Request extends \spf\app\Request {
 		$this->files   = $files;
 		
 	   $this->headers = array();
-	   foreach( $_SERVER as $k => $v ) {
+	   foreach( $server as $k => $v ) {
 	      if( substr($k, 0, 5) == 'HTTP_' ) {
 	         $name = str_replace('_', ' ', strtolower(substr($k, 5)));
 	         $name = str_replace(' ', '-', $name);
@@ -56,24 +69,29 @@ class Request extends \spf\app\Request {
 	      }
 	   }
 	   
-	   if( isset($_SERVER['CONTENT_TYPE']) ) {
-	      $this->headers['content-type'] = $_SERVER['CONTENT_TYPE']; 
+	   if( isset($server['CONTENT_TYPE']) ) {
+	      $this->headers['content-type'] = $server['CONTENT_TYPE']; 
 	   }
 	   
-	   if( isset($_SERVER['CONTENT_LENGTH']) ) {
-	      $this->headers['content-length'] = $_SERVER['CONTENT_LENGTH']; 
+	   if( isset($server['CONTENT_LENGTH']) ) {
+	      $this->headers['content-length'] = $server['CONTENT_LENGTH']; 
 	   }
 	      
 	} // __construct
 	
-	public function cookie( $key, $default = null ) {
-	   return isset($this->cookies[$key]) ? $this->cookies[$key] : $default;
-	}
+   public function cookie( $key, $default = null ) {
+      return isset($this->cookies[$key]) ? $this->cookies[$key] : $default;
+   }
+
+   public function file( $key ) {
+      return isset($this->files[$key]) ? $this->files[$key] : $default;
+   }
 	
-	public function file( $key, $default = null ) {
-	   return isset($this->files[$key]) ? $this->files[$key] : $default;
-	}
+   public function header( $key, $default = null ) {
+      $key = strtolower($key);
+      return isset($this->headers[$key]) ? $this->headers[$key] : $default;
+   }
 	
-} // spf\app\web\Request	
+}
 
 // EOF

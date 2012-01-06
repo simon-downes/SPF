@@ -13,21 +13,22 @@ namespace spf\app;
 
 class Router {
    
-   const CALLBACK_CLASS   = 1;   // array('class_name', 'method')
-   const CALLBACK_OBJECT  = 2;   // array($object, 'method')
-   const CALLBACK_CLOSURE = 3;   // function()
+   const CALLBACK_CLASS   = 1;   // 'ClassName/method'
+   const CALLBACK_STATIC  = 2;   // array(ClassName, 'method')
+   const CALLBACK_OBJECT  = 3;   // array($object, 'method')
+   const CALLBACK_CLOSURE = 4;   // function()
    
    protected $routes;
    
-   protected $auto_route;
+   protected $autoroute;
    
    public function add_route( $regex, $callback ) {
       $this->routes[$regex] = $callback;
       return $this;
    }
    
-   public function auto_route() {
-      $this->auto_route = true;
+   public function autoroute() {
+      $this->autoroute = true;
       return $this;
    }
    
@@ -100,10 +101,10 @@ class Router {
             'action'     => $action
          );
       }
-      // array('class_name', 'method') or array($object, 'method')
+      // array('ClassName', 'method') or array($object, 'method')
       elseif( is_array($callback) ) {
          return array(
-            'type'       => is_object($callback[0]) ? static::CALLBACK_OBJECT : static::CALLBACK_OBJECT,
+            'type'       => is_object($callback[0]) ? static::CALLBACK_OBJECT : static::CALLBACK_STATIC,
             'controller' => $callback[0],
             'action'     => $callback[1]
          );

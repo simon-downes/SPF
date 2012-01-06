@@ -35,11 +35,9 @@ class DatabaseFactory extends \spf\core\BaseFactory {
       $db = new $class($config);
       
       // add default services
-      if( isset($this->context['profiler']) )
-         $db->add_service('profiler', $this->context['profiler']);
+      $db->inject('profiler', $this->services['profiler']);
       
-      if( isset($this->context['log.query']) )
-         $db->add_service('log', $this->context['log.query']);
+      isset($this->services['log.query']) && $db->inject('log', $this->services['log.query']);
       
       return $db;
       

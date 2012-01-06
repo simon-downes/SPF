@@ -27,7 +27,7 @@ abstract class Controller {
       
    }
    
-   public function add_service( $name, $service ) {
+   public function inject( $name, $service ) {
       if( property_exists($this, $name) )
          $this->$name = $service;
       else

@@ -37,7 +37,7 @@ class Model {
       
    }
    
-   public function add_service( $name, $service ) {
+   public function inject( $name, $service ) {
       if( property_exists($this, $name) )
          $this->$name = $service;
       else
@@ -55,7 +55,10 @@ class Model {
       if( !$column )
          return;
       
-      // ensure incoming data is cast to correct type
+      // TODO: perform validation here
+      //    if validator and validation rule set perform validation and set $this->errors[] as required
+      //    otherwise cast incoming data to correct type as already below
+      //    renders validate() function obsolete, save() can simply check has_errors()
       switch( $column->spf_type ) {
          
          case Column::TYPE_BOOL:
@@ -141,7 +144,7 @@ class Model {
       
    }
    
-   public function save( $validate = true, $insert = true ) {
+   public function save( $insert = true ) {
       
       $exists = $this->exists();
       
@@ -149,12 +152,9 @@ class Model {
       if( !$exists && !$insert )
          return false;
       
-      if( $validate && !$this->validate() )
-         return;
-      
-      // run the before_update hook and cancel the update depending the return value
-      //if( $cancel = $this->before_update(!$exists) )
-      //   return false;
+      // if one or more columns have errors outstanding we can't save
+      if( $this->has_errors() )
+         return false;
       
       // create the sql to update the columns, skipping auto-increment fields, and primary key fields if the record exists
       $sql    = '';
@@ -198,8 +198,6 @@ class Model {
       
       $this->set_original_data();
       
-      //$this->after_update(!$exists);
-      
       return $statement->rowCount();
       
    } // save
@@ -212,18 +210,25 @@ class Model {
                
       $params = $this->build_primary_key_params( func_get_args() );
       
-      // run the before_delete hook and cancel the delete depending the return value
-      //if( $cancel = $this->before_delete($params) )
-      //   return false;
-      
       $statement = $this->db->query($sql, $params);
-      
-      //$this->after_delete($params);
       
       return $statement->rowCount();
       
    }
    
+   public function is_unique( $field, $value ) {
+      
+      $sql = "SELECT COUNT(*)
+                FROM {$this->table_name}
+               WHERE {$field} = :{$field}
+                 AND NOT ". $this->build_primary_key_clause();
+      
+      $params = array($field => $value) + $this->build_primary_key_params();
+      
+      return !(bool) $this->db->get_one($sql, $params) >= 1;
+      
+   }
+
    public function is_dirty( $column_name = '' ) {
    
       if( $column_name )
@@ -278,6 +283,7 @@ class Model {
    public function add_validation( $column_name, $data_type, $required = false, $unique = false ) {
       
       // TODO: accept callback for validation
+      // TODO: replace optional dynamic args with single $options array arg
       
       if( !isset($this->columns[$column_name]) )
          throw new Exception('Unknown column: '. $column_name);
@@ -311,7 +317,6 @@ class Model {
          
          case 'email':
          case 'name':
-         case 'lookup':
          case 'postcode':
             // no optional parameters for these datatypes
             break;

@@ -15,7 +15,7 @@ class ModelFactory extends \spf\core\BaseFactory {
    
    public function create( $name = '' ) {
       
-      $db = $this->context['db.default'];    // main database by default
+      $db = $this->services['db.default'];    // main database by default
       
       if( !$db )
          throw new \spf\data\Exception('No default database');
@@ -32,8 +32,8 @@ class ModelFactory extends \spf\core\BaseFactory {
          );
       }
       
-      $model->add_service('validator', $this->context['validator']);
-      $model->add_service('profiler', $this->context['profiler']);
+      $model->inject('profiler', $this->services['profiler']);
+      $model->inject('validator', $this->services['validator']);
       
       return $model;
       

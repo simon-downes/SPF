@@ -32,7 +32,8 @@ class ViewFactory extends \spf\core\BaseFactory {
       $view = new $class();
       
       // add default services
-      $view->add_service('profiler', $this->context['profiler']);
+      $view->inject('profiler', $this->services['profiler']);
+      
       /*
       // if implementing class didn't create a spf framework variable then create one now
       if( !is_array($template->spf) )

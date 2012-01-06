@@ -103,8 +103,8 @@ class Column {
    public $values;
 
    /**
-    * Validation rule.
-    * @var     array
+    * Validation rule, callback or closure.
+    * @var     mixed
     */
    public $validation;
 

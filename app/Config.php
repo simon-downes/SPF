@@ -81,6 +81,6 @@ class Config {
       
    } // set
    
-} // \spf\app\Config
+}
 
 // EOF
