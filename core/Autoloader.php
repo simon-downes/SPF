@@ -135,7 +135,7 @@ class Autoloader {
       
       //echo 'File: ', $file, "\n\n";
       
-      if( $file && ($exists && file_exists($file)) ) {
+      if( $file && ($exists || file_exists($file)) ) {
          include $file;
          return true;
       }

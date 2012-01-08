@@ -9,7 +9,7 @@
  * https://github.com/simon-downes/spf
  */
 
-$services = new spf\core\Container();
+$services = new \spf\core\Container();
 
 $services['collection'] = function ( $services ) {
    return new \spf\core\Collection();
