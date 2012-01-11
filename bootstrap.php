@@ -91,7 +91,7 @@ set_exception_handler(
       }
       else {
          header("HTTP/1.0 503 Internal Server Error");
-         include SPF_PATH. '/view/exceptions/default.php';      
+         include SPF_PATH. '/core/Exception.view.php';      
       }
    }
 );
@@ -103,7 +103,7 @@ register_shutdown_function(
       $fatal = ($error = error_get_last()) && ($flags & $error['type']);
       if( $fatal && !SPF_CLI ) {
          header("HTTP/1.0 503 Internal Server Error");
-         include SPF_PATH. '/view/exceptions/default.php';
+         include SPF_PATH. '/core/Exception.view.php';
       }
    }
 );
