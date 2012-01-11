@@ -68,7 +68,6 @@ abstract class Database {
 				$sql = "SET NAMES '{$this->config['options']['charset']}'";
 				if( isset($this->config['options']['collate']) )
 					$sql .= " COLLATE '{$this->config['options']['collate']}'";
-					d($sql);
 				$this->pdo->exec($sql);
 			}
 
@@ -171,38 +170,112 @@ abstract class Database {
       return $statement->rowCount();
    }
    
-   public function get_all( $statement, $params = array() ) {
+   public function get_all( $statement, $params = array(), $expires = null ) {
+      
+		if( $this->cache ) {
+		   $key = ($statement instanceof \PDOStatement) ? $statement->queryString : $statement;
+		   $key = 'query.'. sha1($key. serialize($params));
+		   if( $result = $this->cache->read($key) )
+		      return $result;
+		}
+		
       $statement = $this->query($statement, $params);
-      return $statement->fetchAll();
+      $result    = $statement->fetchAll();
+      
+      if( ($expires !== null) && $this->cache ) {
+         $this->cache->write($key, $result, $expires);
+      }
+      
+      return $result;
+      
    }
    
-   public function get_assoc( $statement, $params = array() ) {
+   public function get_assoc( $statement, $params = array(), $expires = null ) {
+      
+		if( $this->cache ) {
+		   $key = ($statement instanceof \PDOStatement) ? $statement->queryString : $statement;
+		   $key = 'query.'. sha1($key. serialize($params));
+		   if( $result = $this->cache->read($key) )
+		      return $result;
+		}
+		
       $statement = $this->query($statement, $params);
+      
       $rs = array();
       while( $row = $statement->fetch() ) {
          $key = array_shift($row);
          $rs[$key] = $row;
       }
+      
+      if( ($expires !== null) && $this->cache ) {
+         $this->cache->write($key, $rs, $expires);
+      }
+      
       return $rs;
    }
    
-   public function get_row( $statement, $params = array() ) {
+   public function get_row( $statement, $params = array(), $expires = null ) {
+      
+		if( $this->cache ) {
+		   $key = ($statement instanceof \PDOStatement) ? $statement->queryString : $statement;
+		   $key = 'query.'. sha1($key. serialize($params));
+		   if( $result = $this->cache->read($key) )
+		      return $result;
+		}
+		
       $statement = $this->query($statement, $params);
-      return $statement->fetch();
+      $result    = $statement->fetch();
+      
+      if( ($expires !== null) && $this->cache ) {
+         $this->cache->write($key, $result, $expires);
+      }
+      
+      return $result;
+      
    }
    
-   public function get_col( $statement, $params = array() ) {
+   public function get_col( $statement, $params = array(), $expires = null ) {
+      
+		if( $this->cache ) {
+		   $key = ($statement instanceof \PDOStatement) ? $statement->queryString : $statement;
+		   $key = 'query.'. sha1($key. serialize($params));
+		   if( $result = $this->cache->read($key) )
+		      return $result;
+		}
+		
       $statement = $this->query($statement, $params);
+      
       $rs = array();
       while( $row = $statement->fetch() ) {
          $rs[] = array_shift($row);
       }
+      
+      if( ($expires !== null) && $this->cache ) {
+         $this->cache->write($key, $rs, $expires);
+      }
+      
       return $rs;
+      
    }
    
-   public function get_one( $statement, $params = array() ) {
+   public function get_one( $statement, $params = array(), $expires = null ) {
+      
+		if( $this->cache ) {
+		   $key = ($statement instanceof \PDOStatement) ? $statement->queryString : $statement;
+		   $key = 'query.'. sha1($key. serialize($params));
+		   if( $result = $this->cache->read($key) )
+		      return $result;
+		}
+		
       $statement = $this->query($statement, $params);
-      return $statement->fetchColumn();
+      $result    = $statement->fetchColumn();
+      
+      if( ($expires !== null) && $this->cache ) {
+         $this->cache->write($key, $result, $expires);
+      }
+      
+      return $result;
+      
    }
    
    public function begin() {
