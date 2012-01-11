@@ -57,7 +57,11 @@ class DatabaseFactory extends \spf\core\BaseFactory {
          'user'    => isset($dsn['user'])   ? $dsn['user']   : '',
          'pass'    => isset($dsn['pass'])   ? $dsn['pass']   : '',
          'dbname'  => isset($dsn['path'])   ? $dsn['path']   : '',
+         'options' => array(),
       );
+      
+      if( isset($dsn['query']) )
+         parse_str($dsn['query'], $config['options']);
       
       return $config;
       

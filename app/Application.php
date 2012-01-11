@@ -68,23 +68,19 @@ class Application {
       if( file_exists(SPF_APP_PATH. "/config/{$config}") )
          $this->services['config']->load(SPF_APP_PATH. "/config/{$config}");
       
-      if( $logs = $services['config']->get('logs') ) {
-         foreach( $logs as $name => $source ) {
-            if( !isset($services["log.{$name}"]) ) {
-               $services["log.{$name}"] = $services->share(function( $services ) use ($source) {
-                  return $services['logs']->create($source);
-               });
-            }
+      foreach( $services['config']->get('logs', array()) as $name => $source ) {
+         if( !isset($services["log.{$name}"]) ) {
+            $services["log.{$name}"] = $services->share(function( $services ) use ($source) {
+               return $services['logs']->create($source);
+            });
          }
       }
       
-      if( $databases = $services['config']->get('databases') ) {
-         foreach( $databases as $name => $config ) {
-            if( !isset($services["db.{$name}"]) ) {
-               $services["db.{$name}"] = $services->share(function( $services ) use ($name, $config) {
-                  return $services['databases']->create($config);
-               });
-            }
+      foreach( $services['config']->get('databases', array()) as $name => $config ) {
+         if( !isset($services["db.{$name}"]) ) {
+            $services["db.{$name}"] = $services->share(function( $services ) use ($name, $config) {
+               return $services['databases']->create($config);
+            });
          }
       }
       
@@ -92,17 +88,17 @@ class Application {
    
    public function dispatch( $request ) {
       
-      foreach( $this->services['config']->get('app.routes') as $regex => $callback ) {
+      foreach( $this->services['config']->get('app.routes', array()) as $regex => $callback ) {
          $this->services['router']->add_route($regex, $callback);
       }
       
-      if( $this->services['config']->get('app.auto_route') )
+      if( $this->services['config']->get('app.auto_route', false) )
          $this->services['router']->auto_route();
       
       $route = $this->services['router']->match($request->uri());
       
       if( !$route )
-         throw new NotFoundException($reqiest->uri());
+         throw new NotFoundException($request->uri());
       
       $request->set_route($route);
       

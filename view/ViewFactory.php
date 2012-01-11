@@ -25,7 +25,7 @@ class ViewFactory extends \spf\core\BaseFactory {
             break;
          
          default:
-            throw new Exception("Driver not supported: {$type}");
+            throw new Exception("Adapter not supported: {$type}");
       }
       
       $class = "\\spf\\view\\adapter\\{$adapter}";

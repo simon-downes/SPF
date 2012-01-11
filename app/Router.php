@@ -37,7 +37,7 @@ class Router {
       $route = false;
             
       if( !$this->routes )
-         return $route;
+         throw new Exception('No routes defined');
       
       // routes that don't use parameters should match directly
       if( isset($this->routes[$uri]) ) {

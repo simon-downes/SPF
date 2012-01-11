@@ -63,14 +63,14 @@ abstract class Database {
          $this->pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
          $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);           // always use exceptions
          
-         // TODO: make sure we're using the correct character-set:
-         // ------------------------------------------------------------------------------------------------
-         /* if(isset($this->dbconfig['charset']) && isset($this->dbconfig['collate'])){
-                $this->pdo->exec("SET NAMES '". $this->dbconfig['charset']. "' COLLATE '". $this->dbconfig['collate'] ."'");
-            }
-            else if(isset($this->dbconfig['charset']) ){
-                $this->pdo->exec("SET NAMES '". $this->dbconfig['charset']. "'");
-            }*/
+         // make sure we're using the correct character-set:
+			if( isset($this->config['options']['charset']) ) {
+				$sql = "SET NAMES '{$this->config['options']['charset']}'";
+				if( isset($this->config['options']['collate']) )
+					$sql .= " COLLATE '{$this->config['options']['collate']}'";
+					d($sql);
+				$this->pdo->exec($sql);
+			}
 
       }
       catch( \PDOException $e ) {
@@ -122,8 +122,46 @@ abstract class Database {
          
       }
       
+      $start = microtime(true);
       $statement->execute();
+      $duration = number_format(microtime(true) - $start, 5);
       
+      if( $this->log ) {
+         
+         $query_tag = explode("\n", trim($statement->queryString));
+         $query_tag = trim(array_shift($query_tag), "# \t\n\r");
+         $msg = "Query '{$query_tag}' took {$duration}s";
+         
+         // if debug log then include file/line, class/function and query parameter list
+         if( ($threshold = $this->log->getThreshold()) >= \yolk\log\Logger::LOG_DEBUG ) {
+            foreach( debug_backtrace(0) as $item ) {
+               if( !isset($item['class']) || ($item['class'] != 'yolk\data\Database') ) {
+                  $msg .= "\n   ";
+                  $msg .= isset($item['class']) ? $item['class']. $item['type']. $item['function'] : $item['function'];
+                  $msg .= "()\n   ";
+                  if( isset($item['file']) ) {
+                     $msg .= $item['file'];
+                     $msg .= isset($item['line']) ? '  Line: '. $item['line'] : '';
+                     $msg .= "\n";
+                  } 
+                  if( $params ) {
+                     $msg .= "Parameters:\n";
+                     foreach( $params as $k => $v ) {
+                        $msg .= "      {$k} => {$v}\n";
+                     }
+                  }
+                  $msg .= str_repeat('-', 80);
+                  break;
+               }
+            
+            }
+            $this->log->debug($msg);
+         }
+         elseif( $threshold >= \spf\log\Logger::LOG_INFO ) {
+            $this->log->info($msg);
+         }
+      }
+		
       return $statement;
       
    } // query
@@ -167,28 +205,6 @@ abstract class Database {
       return $statement->fetchColumn();
    }
    
-   /**
-    * Determines if the specified field exists in the current database.
-    *
-    * @param   string    $table_name   the name of the table to look for.
-    * @return  boolean
-    */
-   public function has_table( $table_name ) {
-      return in_array($table_name, $this->meta_tables());
-   }
-   
-   /**
-    * Determines if the specified field exists in a table.
-    *
-    * @param   string    $table_name   the name of the table to look in.
-    * @param   string    $column       the name of the field to look for.
-    * @return  boolean
-    */
-   public function has_column( $table_name, $column ) {
-      $meta = $this->meta_columns($table_name);
-      return isset($meta[$column]);
-   }
-   
    public function begin() {
       if( !$this->is_connected() )
          $this->connect();
@@ -219,13 +235,32 @@ abstract class Database {
       return $this->pdo->lastInsertId();
    }
 
-   /**
-    * Returns the number of records affected by the last query.
-    *
-    * @return  integer
-    */
-   //abstract public function affected_rows();
+   public function escape( $value, $type = PDO::PARAM_STR ) {
+      return $this->pdo->quote($value, $type);
+   }
 
+   /**
+    * Determines if the specified field exists in the current database.
+    *
+    * @param   string    $table_name   the name of the table to look for.
+    * @return  boolean
+    */
+   public function has_table( $table_name ) {
+      return in_array($table_name, $this->meta_tables());
+   }
+   
+   /**
+    * Determines if the specified field exists in a table.
+    *
+    * @param   string    $table_name   the name of the table to look in.
+    * @param   string    $column       the name of the field to look for.
+    * @return  boolean
+    */
+   public function has_column( $table_name, $column ) {
+      $meta = $this->meta_columns($table_name);
+      return isset($meta[$column]);
+   }
+   
    /**
     * Returns a list of tables in the current database.
     *
@@ -261,14 +296,6 @@ abstract class Database {
     */
    abstract public function meta_primary_key( $table_name, $refresh = false );
 
-   /**
-    * Escapes a string so it is safe to put into a query.
-    *
-    * @param   string    $str   the string to escape.
-    * @return  string
-    */
-   //abstract public function escape( $str );
-
-} // spf\data\Database
+}
 
 // EOF

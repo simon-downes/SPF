@@ -15,7 +15,7 @@ class LogFactory extends \spf\core\BaseFactory {
    
    public function create( $source = '' ) {
       
-      if( !preg_match('#^((tcp|udp)://|std(err|out)$|php$)#', $source, $m) )
+      if( !preg_match('#^((tcp|udp)://|syslog|std(err|out)$|php$)#', $source, $m) )
          $m = array('');
       
       switch( $m[0] ) {
@@ -25,6 +25,10 @@ class LogFactory extends \spf\core\BaseFactory {
             $logger = new StandardLogger($m[0]);
             break;
          
+         case 'syslog':
+            $logger = new SysLogger( (string) substr($dest, 7) );
+            break;
+
          case 'tcp://':
          case 'udp://':
             $logger = new NetworkLogger($source);

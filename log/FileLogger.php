@@ -26,7 +26,7 @@ class FileLogger extends Logger {
       if( $level > $this->threshold )
          return;
       
-      fwrite($this->file, $this->build_message($msg, $level));
+      return fwrite($this->file, $this->build_message($msg, $level)) !== false;
       
    } // log
    

@@ -31,24 +31,28 @@ class StandardLogger extends Logger {
       
       $msg = $this->build_message($msg, $level);
       
+      $success = false;
+      
       switch( $this->source ) {
          case 'stderr':
             if( !defined('STDERR') )
                throw new Exception('STDERR stream not available');
-            fwrite(STDERR, $msg);
+            $success = fwrite(STDERR, $msg) !== false;
             break;
          
          case 'stdout':
             if( !defined('STDOUT') )
                throw new Exception('STDOUT stream not available');
-            fwrite(STDOUT, $msg);
+            $success = fwrite(STDOUT, $msg) !== false;
             break;
          
          case 'php':
-            error_log(trim($msg));
+            $success = error_log(trim($msg));
             break;
          
       }
+      
+      return $success;
       
    } // log
    

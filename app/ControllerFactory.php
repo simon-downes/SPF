@@ -18,7 +18,7 @@ class ControllerFactory extends \spf\core\BaseFactory {
       $class = SPF_APP_NAMESPACE. "\\controllers\\{$name}";
       
       if( !class_exists($class) )
-         throw new NotFoundException();
+         throw new Exception("Controller Class Not Found: {$class}");
       
       $controller = new $class($this->services['response']);
       
@@ -26,8 +26,6 @@ class ControllerFactory extends \spf\core\BaseFactory {
       $controller->inject('profiler', $this->services['profiler']);
       $controller->inject('models', $this->services['models']);
       $controller->inject('views', $this->services['views']);
-      
-      $controller->inject('db', $this->services['db.default']);
       
       return $controller;
       

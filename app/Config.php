@@ -21,16 +21,6 @@ class Config {
    
    public function load( $file ) {
       
-      // minimal default configuration
-      $config = array(
-         'app.auto_route' => true,
-         'app.routes' => array(
-            '/' => 'IndexController/index'
-         ),
-         'databases' => array(),
-         'logs' => array(),
-      );
-      
       include($file);
       
       if( !is_array($config) )
