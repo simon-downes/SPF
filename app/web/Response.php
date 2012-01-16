@@ -69,14 +69,18 @@ class Response extends \spf\app\Response {
 	protected $status;
 	
 	protected $headers;
+	
+	protected $cookies;
 	   
    protected $body;
    
    public function __construct() {
-      
+
       $this->status(200)
-           ->body('')
-           ->headers = array();
+           ->body('');
+
+      $this->headers = array();
+      $this->cookies = array();      
       
    }
    
@@ -115,6 +119,27 @@ class Response extends \spf\app\Response {
       
    } // header
    
+   public function cookie( $name = '', $value = '', $expires = 0 ) {
+
+      switch( func_num_args() ) {
+         case 0:
+            return $this->cookies;
+
+         case 1:
+            return isset($this->cookies[$name]) ? $this->cookies[$name] : array();
+
+         case 2:
+         default:
+            $this->cookies[$name] =  array(
+               'value'   => $value,
+               'expires' => $expires ? time() + $expires : 0
+            );
+            return $this;
+
+      }
+
+   } // cookie
+
    public function send() {
       
       header("HTTP/1.1 {$this->status['code']} {$this->status['message']}");
@@ -123,8 +148,18 @@ class Response extends \spf\app\Response {
          header("{$name}: $value");
       }
       
+      foreach ($this->cookies as $name => $cookie) {
+         setcookie($name, $cookie['value'], $cookie['expires']);
+      }
+
       echo $this->body;
       
+   }
+   
+   public function redirect( $url, $permenant = false ) {
+      $this->status( $permenant ? 301 : 303)
+           ->header('Location', $url)
+           ->send();
    }
    
 }

@@ -35,7 +35,7 @@ class Application {
          
          $this->init( $config );
          
-         $this->dispatch($this->services['request']);
+         $this->dispatch($this->services['request'], $this->services['response']);
          
          //$this->services['response']->send();
          
@@ -86,7 +86,7 @@ class Application {
       
    } // init
    
-   public function dispatch( $request ) {
+   public function dispatch( $request, $response ) {
       
       foreach( $this->services['config']->get('app.routes', array()) as $regex => $callback ) {
          $this->services['router']->add_route($regex, $callback);
@@ -101,6 +101,9 @@ class Application {
          throw new NotFoundException($request->uri());
       
       $request->set_route($route);
+      
+      if( !$this->auth($request, $response) )
+         throw new AccessDeniedException('Access denied to: '. $request->uri());
       
       switch( $route['type'] ) {
          case Router::CALLBACK_CLASS:
@@ -132,6 +135,10 @@ class Application {
       
    } // dispatch
    
+   protected function auth( $request, $response ) {
+      return true;
+   }
+
 }
 
 // EOF

@@ -13,6 +13,7 @@ namespace spf\app;
 
 abstract class Controller {
    
+   protected $request;
    protected $response;
    
    // services
@@ -21,8 +22,9 @@ abstract class Controller {
    protected $models;      // model factory
    protected $views;       // view factory
    
-   public function __construct( $response ) {
+   public function __construct( $request, $response ) {
       
+      $this->request  = $request;
       $this->response = $response;
       
    }

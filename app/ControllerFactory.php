@@ -20,7 +20,10 @@ class ControllerFactory extends \spf\core\BaseFactory {
       if( !class_exists($class) )
          throw new Exception("Controller Class Not Found: {$class}");
       
-      $controller = new $class($this->services['response']);
+      $controller = new $class(
+         $this->services['request'],
+         $this->services['response']
+      );
       
       // add default services
       $controller->inject('profiler', $this->services['profiler']);
