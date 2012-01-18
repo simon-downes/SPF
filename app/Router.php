@@ -74,7 +74,7 @@ class Router {
          }
          
          // no match so try autorouting - /controller/action/param1/.../paramN
-         if( !$route && $this->auto_route ) {
+         if( !$route && $this->autoroute ) {
          $parameters = explode('/', ltrim($uri, '/'));
             $route = array(
                'type'       => static::CALLBACK_CLASS,

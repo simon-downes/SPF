@@ -21,7 +21,8 @@ defined('SPF_LIBS_PATH') || define('SPF_LIBS_PATH', realpath(__DIR__. '/..'));
 
 // if running on a web server then work out the web root for the application
 if( !SPF_CLI )
-   defined('SPF_WEB_PATH') || define( 'SPF_WEB_PATH', pathinfo($_SERVER['PHP_SELF'], PATHINFO_DIRNAME) );
+   defined('SPF_WEB_PATH') || define( 'SPF_WEB_PATH', str_replace('/'. pathinfo($_SERVER['PHP_SELF'], PATHINFO_BASENAME), '', $_SERVER['PHP_SELF']) );
+
 
 require SPF_PATH. '/core/Autoloader.php';
 

@@ -156,8 +156,8 @@ class Response extends \spf\app\Response {
       
    }
    
-   public function redirect( $url, $permenant = false ) {
-      $this->status( $permenant ? 301 : 303)
+   public function redirect( $url, $permanent = false ) {
+      $this->status( $permanent ? 301 : 303)
            ->header('Location', $url)
            ->send();
    }
