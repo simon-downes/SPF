@@ -5,7 +5,7 @@ set_error_handler(
 		return false;
 	}
 );
-if( $error instanceof Exception ) {
+if( $error instanceof \Exception ) {
 	$error = array(
 		'name'    => get_class($error),
 		'code'    => $error->getCode(),

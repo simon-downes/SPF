@@ -53,10 +53,11 @@ require SPF_PATH. '/core/Autoloader.php';
    'spf\\data\\Database'         => SPF_PATH. '/data/Database.php',
    'spf\\data\\DatabaseFactory'  => SPF_PATH. '/data/DatabaseFactory.php',
    'spf\\data\\Exception'        => SPF_PATH. '/data/Exception.php',
-   'spf\\data\\Model'            => SPF_PATH. '/data/Model.php',
-   'spf\\data\\ModelFactory'     => SPF_PATH. '/data/ModelFactory.php',
    'spf\\data\\adapter\\MySQL'   => SPF_PATH. '/data/adapter/MySQL.php',
    'spf\\data\\adapter\\SQLite'  => SPF_PATH. '/data/adapter/SQLite.php',
+   
+   'spf\\model\\ActiveRecord'    => SPF_PATH. '/model/ActiveRecord.php',
+   'spf\\model\\ModelFactory'    => SPF_PATH. '/model/ModelFactory.php',
    
    'spf\\log\\Exception'         => SPF_PATH. '/log/Exception.php',
    'spf\\log\\FileLogger'        => SPF_PATH. '/log/FileLogger.php',

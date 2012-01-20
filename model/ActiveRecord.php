@@ -9,9 +9,11 @@
  * https://github.com/simon-downes/spf
  */
 
-namespace spf\data;
+namespace spf\model;
 
-class Model {
+use spf\data\Column;
+
+class ActiveRecord {
    
    protected $db;
    protected $table_name;
@@ -25,6 +27,7 @@ class Model {
    // services
    protected $profiler;
    protected $validator;
+   protected $models;
    
    public function __construct( $db, $table_name, $columns, $primary_key ) {
       

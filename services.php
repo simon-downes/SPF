@@ -64,7 +64,7 @@ $services['controllers'] = $services->share(function( $services ) {
 });
 
 $services['models'] = $services->share(function( $services ) {
-   return new \spf\data\ModelFactory($services);
+   return new \spf\model\ModelFactory($services);
 });
 
 $services['views'] = $services->share(function( $services ) {

@@ -9,7 +9,7 @@
  * https://github.com/simon-downes/spf
  */
 
-namespace spf\data;
+namespace spf\model;
 
 class ModelFactory extends \spf\core\BaseFactory {
    
@@ -32,8 +32,11 @@ class ModelFactory extends \spf\core\BaseFactory {
          );
       }
       
-      $model->inject('profiler', $this->services['profiler']);
-      $model->inject('validator', $this->services['validator']);
+      if( $model instanceof ActiveRecord ) {
+         $model->inject('profiler', $this->services['profiler']);
+         $model->inject('validator', $this->services['validator']);
+         $model->inject('models', $this->services['models']);
+      }
       
       return $model;
       
