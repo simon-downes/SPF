@@ -34,19 +34,6 @@ class ViewFactory extends \spf\core\BaseFactory {
       // add default services
       $view->inject('profiler', $this->services['profiler']);
       
-      /*
-      // if implementing class didn't create a spf framework variable then create one now
-      if( !is_array($template->spf) )
-         $template->spf = array();
-      
-      // common assigns...
-      $template->spf['app_name']    = SPF::$app->name;
-      $template->spf['app_version'] = SPF::$app->version;
-      $template->spf['app_state']   = SPF::$config['state'];
-      $template->spf['route']       = SPF::$route;
-      $template->spf['base_url']    = substr(SPF::get_base_url(), 0, -1);
-      $template->spf['full_url']    = substr(SPF::get_full_url(), 0, -1);
-      */
       return $view;
       
    }

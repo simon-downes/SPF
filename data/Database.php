@@ -41,10 +41,23 @@ abstract class Database {
    } // __construct
    
    public function inject( $name, $service ) {
-      if( property_exists($this, $name) )
-         $this->$name = $service;
-      else
-         throw new Exception(get_class($this). " has no service property '{$name}'");
+      
+      if( !property_exists($this, $name) )
+         return false;
+      
+      if( ($name == 'cache') && !($service instanceof \spf\storage\Cache) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\storage\\Cache");
+   
+      elseif( ($name == 'log') && !($service instanceof \spf\log\Logger) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\log\\Logger");
+   
+      elseif( ($name == 'profiler') && !($service instanceof \spf\util\Profiler) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\util\\Profiler");
+      
+      $this->$name = $service;
+      
+      return true;
+      
    }
    
    public function connect() {

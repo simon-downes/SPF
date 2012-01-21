@@ -26,7 +26,6 @@ class ControllerFactory extends \spf\core\BaseFactory {
       );
       
       // add default services
-      $controller->inject('profiler', $this->services['profiler']);
       $controller->inject('models', $this->services['models']);
       $controller->inject('views', $this->services['views']);
       

@@ -26,7 +26,6 @@ class ActiveRecord {
    
    // services
    protected $profiler;
-   protected $validator;
    protected $models;
    
    public function __construct( $db, $table_name, $columns, $primary_key ) {
@@ -41,10 +40,20 @@ class ActiveRecord {
    }
    
    public function inject( $name, $service ) {
-      if( property_exists($this, $name) )
-         $this->$name = $service;
-      else
-         throw new Exception(get_class($this). " has no service property '{$name}'");
+      
+      if( !property_exists($this, $name) )
+         return false;
+      
+      if( ($name == 'models') && !($service instanceof \spf\model\ModelFactory) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\model\\ModelFactory");
+   
+      elseif( ($name == 'profiler') && !($service instanceof \spf\util\Profiler) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\util\\Profiler");
+      
+      $this->$name = $service;
+      
+      return true;
+      
    }
    
    public function __get( $column ) {

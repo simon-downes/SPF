@@ -18,10 +18,17 @@ abstract class View {
    protected $data = array();
    
    public function inject( $name, $service ) {
-      if( property_exists($this, $name) )
-         $this->$name = $service;
-      else
-         throw new Exception(get_class($this). " has no service property '{$name}'");
+      
+      if( !property_exists($this, $name) )
+         return false;
+      
+      if( ($name == 'profiler') && !($service instanceof \spf\util\Profiler) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\util\\Profiler");
+      
+      $this->$name = $service;
+      
+      return true;
+      
    }
    
    /**

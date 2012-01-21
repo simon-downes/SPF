@@ -17,8 +17,6 @@ abstract class Controller {
    protected $response;
    
    // services
-   protected $profiler;    // application profiler
-   protected $validator;   // valid
    protected $models;      // model factory
    protected $views;       // view factory
    
@@ -30,15 +28,21 @@ abstract class Controller {
    }
    
    public function inject( $name, $service ) {
-      if( property_exists($this, $name) )
-         $this->$name = $service;
-      else
-         throw new Exception(get_class($this). " has no service property '{$name}'");
+      
+      if( !property_exists($this, $name) )
+         return false;
+      
+      if( ($name == 'models') && !($service instanceof \spf\model\ModelFactory) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\model\\ModelFactory");
+   
+      elseif( ($name == 'views') && !($service instanceof \spf\view\ViewFactory) )
+         throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\view\\ViewFactory");
+   
+      $this->$name = $service;
+      
+      return true;
+      
    }
-   
-   public function before() {}
-   
-   public function after() {}
    
    abstract public function index();
    
