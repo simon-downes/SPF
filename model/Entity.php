@@ -55,8 +55,8 @@ class Entity implements \ArrayAccess, \Iterator, \Countable {
    }
 
    public function __set( $var, $value ) {
+      $this->dirty[$var] = ($this->data[$var] != $value);
       $this->data[$var]  = $value;
-      $this->dirty[$var] = true;
    }
 
    public function __isset( $var ) {

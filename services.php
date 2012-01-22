@@ -67,6 +67,10 @@ $services['models'] = $services->share(function( $services ) {
    return new \spf\model\ModelFactory($services);
 });
 
+$services['model.map'] = $services->share(function( $services ) {
+   return new \spf\model\IdentityMap();
+});
+
 $services['views'] = $services->share(function( $services ) {
    return new \spf\view\ViewFactory($services);
 });

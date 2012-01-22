@@ -38,9 +38,9 @@ abstract class DataMapper {
 
    abstract public function delete( $entity );
 
-   abstract public function find( $entity );
+   abstract public function find( $filter = array() );
 
-   abstract public function count( $entity );
+   abstract public function count( $filter = array() );
 
 }
 

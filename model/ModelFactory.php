@@ -34,7 +34,7 @@ class ModelFactory extends \spf\core\BaseFactory {
       if( !isset($this->services['db.default']) )
          throw new \spf\data\Exception('No default database');
       
-      $class = SPF_APP_NAMESPACE. "\\model\\{$name}Mapper";
+      $class = SPF_APP_NAMESPACE. "\\models\\{$name}Mapper";
       
       $mapper = new $class(
          $this->services['db.default'],
@@ -46,7 +46,7 @@ class ModelFactory extends \spf\core\BaseFactory {
       
       return $mapper;
       
-   }
+   } // mapper
    
    public function record( $table ) {
    
@@ -67,7 +67,7 @@ class ModelFactory extends \spf\core\BaseFactory {
       
       return $model;
       
-   }
+   } // record
    
    public function entity( $name, $data = array() ) {
       return new \spf\model\Entity($data);

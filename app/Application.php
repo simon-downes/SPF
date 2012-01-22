@@ -25,7 +25,7 @@ class Application {
       defined('SPF_LOG_PATH')      || define('SPF_LOG_PATH',   SPF_APP_PATH. '/tmp/logs');
       defined('SPF_VIEW_PATH')     || define('SPF_VIEW_PATH',  SPF_APP_PATH. '/views');
       
-      \spf\core\Autoloader::add_namespace(SPF_APP_NAMESPACE, SPF_APP_PATH);
+      \spf\core\Autoloader::add_namespace(SPF_APP_NAMESPACE, SPF_APP_PATH. '/src');
       
    }
    
@@ -116,12 +116,8 @@ class Application {
                throw new Exception("Not Implemented: \\{$class}::{$route['action']}()");
             }
             
-            $route['controller']->before();
-            
             $method = new \ReflectionMethod($route['controller'], $route['action']);
             $response = $method->invokeArgs($route['controller'], $route['parameters']);
-            
-            $route['controller']->after();
             
             break;
             
