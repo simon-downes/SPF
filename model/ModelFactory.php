@@ -70,8 +70,15 @@ class ModelFactory extends \spf\core\BaseFactory {
    } // record
    
    public function entity( $name, $data = array() ) {
-      return new \spf\model\Entity($data);
-   }
+      
+      if( !class_exists($class = SPF_APP_NAMESPACE. "\\models\\{$name}") )
+         $class = '\spf\model\Entity';
+      
+      $fields = isset($this->services["{$name}.fields"]) ? $this->services["{$name}.fields"] : array();
+      
+      return new $class($data, $fields);
+      
+   } // entity
    
 }
 
