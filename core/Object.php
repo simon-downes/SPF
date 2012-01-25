@@ -19,6 +19,18 @@ class Object implements \ArrayAccess, \Iterator, \Countable {
       $this->build($data);
    }
 
+   public function has( $key ) {
+      return isset($this->data[$key]);
+   }
+
+   public function contains( $value ) {
+      return (bool) count(array_keys($this->data, $value, true));
+   }
+
+   public function search( $value ) {
+      return array_keys($this->data, $value, true);
+   }
+
    public function reset() {
       $this->build(array());
    }

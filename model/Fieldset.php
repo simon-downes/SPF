@@ -23,7 +23,7 @@ class Fieldset extends \spf\core\Object {
       
       // default options
       $defaults = array(
-         'default'  => null,
+         'default'  => $this->get_empty_value($type),
          'nullable' => false,
          'db_field' => $name,
       );
@@ -34,6 +34,48 @@ class Fieldset extends \spf\core\Object {
       
       $this->$name = $item;
       
+   }
+
+   protected function get_empty_value( $type ) {
+
+      switch( $type ) {
+         case 'integer':
+         case 'float':
+            $empty = 0;
+            break;
+
+         case 'datetime':
+            $empty = '0000-00-00 00:00:00';
+            break;
+
+         case 'date':
+            $empty = '0000-00-00';
+            break;
+
+         case 'time':
+            $empty = ' 00:00:00';
+            break;
+
+         case 'ip':
+            $empty = '0.0.0.0';
+            break;
+
+         case 'email':
+         case 'url':
+         case 'alpha':
+         case 'alphanumeric':
+         case 'regex':
+         case 'text':
+            $empty = '';
+            break;
+
+         default:
+            $empty = null;
+            break;
+      }
+
+      return $empty;
+
    }
       
 }

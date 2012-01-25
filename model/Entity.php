@@ -69,14 +69,16 @@ class Entity extends \spf\core\Object {
    }
 
    public function has_id() {
-      return isset($this->id) && !isset($this->errors['id']);
+      return !empty($this->id) && empty($this->errors['id']);
    }
 
    public function __set( $key, $value ) {
       
       // id is immutable once set - i.e. can only be set once
-      if( ($key == 'id') && isset($this->data['id']) )
+      if( ($key == 'id') && $this->has_id() )
          throw new Exception('Property \'id\' is immutable');
+      
+      unset($this->errors[$key]);
       
       $this->dirty[$key] = isset($this->data[$key]) && ($this->data[$key] != $value);
       
@@ -140,12 +142,23 @@ class Entity extends \spf\core\Object {
    }
    
    protected function _boolean( $key, $value ) {
+      // FILTER_VALIDATE_BOOLEAN will return null if passed an actually boolean false
+      if( $value === false )
+         return $value;
       $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
       if( $value === null )
          $this->errors[$key] = 'boolean';
       return $value;
    }
-   
+
+   protected function _enum( $key, $value ) {
+      if( !$allowed = $this->fields[$key]->values )
+         throw new Exception("No values specified for field '{$key}'");
+      if( !$allowed->contains($value) )
+         $this->errors[$key] = 'value';
+      return $value;
+   }
+
    protected function _datetime( $key, $value, $format = 'Y-m-d H:i:s', $null_date = '0000-00-00 00:00:00' ) {
       
       // special case for null dates as they can't be converted to a timestamp
@@ -192,27 +205,29 @@ class Entity extends \spf\core\Object {
    }
    
    protected function _email( $key, $value ) {
-      $value = filter_var($value, FILTER_VALIDATE_EMAIL);
+      if( $value !== '' )
+         $value = filter_var($value, FILTER_VALIDATE_EMAIL);
       if( $value === false )
          $this->errors[$key] = 'email';
       return $value;
    }
    
    protected function _url( $key, $value ) {
-      $value = filter_var($value, FILTER_VALIDATE_URL);
+      if( $value !== '' )
+         $value = filter_var($value, FILTER_VALIDATE_URL);
       if( $value === false )
          $this->errors[$key] = 'url';
       return $value;
    }
    
    protected function _alpha( $key, $value ) {
-      if( !preg_match('/[a-z]+/i', $value) )
+      if( !preg_match('/[a-z]*/i', $value) )
          $this->errors[$key] = 'alpha';
       return $value;
    }
    
    protected function _alphanumeric( $key, $value ) {
-      if( !preg_match('/[a-z0-9]+/i', $value) )
+      if( !preg_match('/[a-z0-9]*/i', $value) )
          $this->errors[$key] = 'regex';
       return $value;
    }
