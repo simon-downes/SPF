@@ -37,8 +37,20 @@ class Entity extends \spf\core\Object {
 
       // loop defined fields and assign value from arr or default value
       foreach( $this->fields as $key => $field ) {
-         $this->$key = isset($data[$key]) ? $data[$key] : $field['default'];
-         unset($data[$key]);
+         // domain fieldname
+         if( isset($data[$key]) ) {
+            $this->$key = $data[$key];
+            unset($data[$key]);
+         }
+         // database field name
+         elseif( isset($data[$field->db_field]) ) {
+            $this->$key = $data[$field->db_field];
+            unset($data[$field->db_field]);
+         }
+         // use default value
+         else {
+            $this->$key = $field->default;
+         }
       }
 
       // remaining values in $data aren't defined in $this->fields so just assign them
