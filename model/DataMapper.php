@@ -41,7 +41,14 @@ abstract class DataMapper {
       
    }
    
-   abstract public function create( $entity );
+   public function save( $entity ) {
+      if( $entity->has_id() )
+         $this->update($entity);
+      else
+         $this->insert($entity);
+   }
+   
+   abstract public function insert( $entity );
 
    abstract public function update( $entity );
 

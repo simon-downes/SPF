@@ -36,15 +36,15 @@ class Entity extends \spf\core\Object {
          throw new Exception("Not an array: {$data}");
 
       // loop defined fields and assign value from arr or default value
-		foreach( $this->fields as $k => $field ) {
-			$this->$k = isset($data[$k]) ? $data[$k] : $field['default'];
-			unset($data[$k]);
-		}
-		
-		// remaining values in $data aren't defined in $this->fields so just assign them
-		foreach( $data as $k => $v ) {
-			$this->$k = $v;
-		}
+      foreach( $this->fields as $key => $field ) {
+         $this->$key = isset($data[$key]) ? $data[$key] : $field['default'];
+         unset($data[$key]);
+      }
+
+      // remaining values in $data aren't defined in $this->fields so just assign them
+      foreach( $data as $key => $value ) {
+         $this->$key = $value;
+      }
 
       $this->dirty = array();
 
@@ -52,113 +52,121 @@ class Entity extends \spf\core\Object {
 
    }
 
-   public function is_dirty( $var ) {
-      return isset($this->dirty[$var]) && $this->dirty[$var];
+   public function is_dirty( $key ) {
+      return isset($this->dirty[$key]) && $this->dirty[$key];
    }
 
-   public function __set( $var, $value ) {
+   public function has_id() {
+      return isset($this->id) && !isset($this->errors['id']);
+   }
+
+   public function __set( $key, $value ) {
       
-      $this->dirty[$var] = isset($this->data[$var]) && ($this->data[$var] != $value);
+      // id is immutable once set - i.e. can only be set once
+      if( ($key == 'id') && isset($this->data['id']) )
+         throw new Exception('Property \'id\' is immutable');
       
-      if( isset($this->fields[$var]) ) {
-         $this->data[$var] = $this->validate($var, $value);
+      $this->dirty[$key] = isset($this->data[$key]) && ($this->data[$key] != $value);
+      
+      if( isset($this->fields[$key]) ) {
+         $this->data[$key] = $this->validate($key, $value);
       }
       else {
-         $this->data[$var] = $value;
+         $this->data[$key] = $value;
       }
       
    }
 
-   public function __unset( $var ) {
-      parent::__unset($var);
-      $this->dirty[$var] = true;
+   public function __unset( $key ) {
+      parent::__unset($key);
+      $this->dirty[$key] = true;
    }
    
-   protected function validate( $var, $value ) {
+   protected function validate( $key, $value ) {
       
-      $field = $this->fields[$var];
+      $field = $this->fields[$key];
       
       if( ($value === null) && !$field->nullable ) {
-         $this->errors[$var] = 'null';
+         $this->errors[$key] = 'null';
       }
       elseif( !$value && $field->required ) {
-         $this->errors[$var] = 'required';
+         $this->errors[$key] = 'required';
       }
       else {
          // validation methods are named as the type prefixed with an underscore
          // validation methods for common types are build in, child objects may implement their own
          // e.g. User object defines a field type of 'name' and provides a validation method of '_name'
          $method = "_{$field->type}";
-         $clean  = method_exists($this, $method) ? $this->$method($var, $value) : $value;
+         $clean  = method_exists($this, $method) ? $this->$method($key, $value) : $value;
       }
       
       // return original value on error or clean value otherwise
-      return isset($this->errors[$var]) ? $value : $clean;
+      return isset($this->errors[$key]) ? $value : $clean;
       
    }
    
-   protected function _integer( $var, $value ) {
+   protected function _integer( $key, $value ) {
       $value = filter_var($value, FILTER_VALIDATE_INT);
       if( $value === false )
-         $this->errors[$var] = 'integer';
-      elseif( isset($this->fields[$var]->min) && ($value < $this->fields[$var]->min) )
-         $this->errors[$var] = 'min';
-      elseif( isset($this->fields[$var]->max) && ($value < $this->fields[$var]->max) )
-         $this->errors[$var] = 'max';
+         $this->errors[$key] = 'integer';
+      elseif( isset($this->fields[$key]->min) && ($value < $this->fields[$key]->min) )
+         $this->errors[$key] = 'min';
+      elseif( isset($this->fields[$key]->max) && ($value < $this->fields[$key]->max) )
+         $this->errors[$key] = 'max';
       return $value;
    }
    
-   protected function _float( $var, $value ) {
+   protected function _float( $key, $value ) {
       $value = filter_var($value, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND);
       if( $value === false )
-         $this->errors[$var] = 'float';
-      elseif( isset($this->fields[$var]->min) && ($value < $this->fields[$var]->min) )
-         $this->errors[$var] = 'min';
-      elseif( isset($this->fields[$var]->max) && ($value < $this->fields[$var]->max) )
-         $this->errors[$var] = 'max';
+         $this->errors[$key] = 'float';
+      elseif( isset($this->fields[$key]->min) && ($value < $this->fields[$key]->min) )
+         $this->errors[$key] = 'min';
+      elseif( isset($this->fields[$key]->max) && ($value < $this->fields[$key]->max) )
+         $this->errors[$key] = 'max';
       return $value;
    }
    
-   protected function _boolean( $var, $value ) {
+   protected function _boolean( $key, $value ) {
       $value = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
       if( $value === null )
-         $this->errors[$var] = 'boolean';
+         $this->errors[$key] = 'boolean';
       return $value;
    }
    
-   protected function _datetime( $var, $value, $format = 'Y-m-d H:i:s', $null_date = '0000-00-00 00:00:00' ) {
+   protected function _datetime( $key, $value, $format = 'Y-m-d H:i:s', $null_date = '0000-00-00 00:00:00' ) {
       
       // special case for null dates as they can't be converted to a timestamp
-		if( substr($value, 0, 10) == '0000-00-00' ) {
-		   if( $this->fields[$var]->required )
-			   $this->errors[$var] = 'required';
-			return $null_date;
-		}
-		
-		$ts = filter_var($value, FILTER_VALIDATE_INT);
-		
-		// if not a timestamp then try and make one
-		if( $ts === false )
-			$ts = strtotime($value);
-		
-		if( $ts === false )
-			$this->errors[$var] = $this->fields[$var]->type;
-		else
-			$value = date($format, $ts);
-		
-		return $value;
-		
+      if( substr($value, 0, 10) == '0000-00-00' ) {
+         if( $this->fields[$key]->required )
+            $this->errors[$key] = 'required';
+         return $null_date;
+      }
+
+      $ts = filter_var($value, FILTER_VALIDATE_INT);
+
+      // if not a timestamp then try and make one
+      if( $ts === false )
+         $ts = strtotime($value);
+
+      if( $ts === false )
+         $this->errors[$key] = $this->fields[$key]->type;
+      else
+         $value = date($format, $ts);
+
+      return $value;
+
    }
    
-   public function _date( $var, $value ) {
-      return $this->_datetime($var, $value, 'Y-m-d', '0000-00-00');
+   public function _date( $key, $value ) {
+      return $this->_datetime($key, $value, 'Y-m-d', '0000-00-00');
    }
    
-   public function _time( $var, $value ) {
-      return $this->_datetime($var, $value, 'H:i:s', '00:00:00');
+   public function _time( $key, $value ) {
+      return $this->_datetime($key, $value, 'H:i:s', '00:00:00');
    }
    
-   protected function _ip( $var, $value ) {
+   protected function _ip( $key, $value ) {
       // if integer then convert to string
       $value = filter_var($value, FILTER_VALIDATE_INT);
       if( $value !== false )
@@ -166,42 +174,42 @@ class Entity extends \spf\core\Object {
 
       $value = filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
       if( $value === false )
-         $this->errors[$var] = 'ip';
+         $this->errors[$key] = 'ip';
       
       return $value;
    }
    
-   protected function _email( $var, $value ) {
+   protected function _email( $key, $value ) {
       $value = filter_var($value, FILTER_VALIDATE_EMAIL);
       if( $value === false )
-         $this->errors[$var] = 'email';
+         $this->errors[$key] = 'email';
       return $value;
    }
    
-   protected function _url( $var, $value ) {
+   protected function _url( $key, $value ) {
       $value = filter_var($value, FILTER_VALIDATE_URL);
       if( $value === false )
-         $this->errors[$var] = 'url';
+         $this->errors[$key] = 'url';
       return $value;
    }
    
-   protected function _alpha( $var, $value ) {
+   protected function _alpha( $key, $value ) {
       if( !preg_match('/[a-z]+/i', $value) )
-         $this->errors[$var] = 'alpha';
+         $this->errors[$key] = 'alpha';
       return $value;
    }
    
-   protected function _alphanumeric( $var, $value ) {
+   protected function _alphanumeric( $key, $value ) {
       if( !preg_match('/[a-z0-9]+/i', $value) )
-         $this->errors[$var] = 'regex';
+         $this->errors[$key] = 'regex';
       return $value;
    }
    
-   protected function _regex( $var, $value ) {
-      if( !$regex = $this->fields[$var]->regex )
-         throw new Exception("No regex specified for field '{$var}'");
+   protected function _regex( $key, $value ) {
+      if( !$regex = $this->fields[$key]->regex )
+         throw new Exception("No regex specified for field '{$key}'");
       if( !preg_match($regex, $value) )
-         $this->errors[$var] = 'regex';
+         $this->errors[$key] = 'regex';
       return $value;
    }
    

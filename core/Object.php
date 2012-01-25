@@ -40,23 +40,39 @@ class Object implements \ArrayAccess, \Iterator, \Countable {
 
    // *** Dynamic property access methods
 
-   public function __get( $var ) {
-      return isset($this->data[$var]) ? $this->data[$var] : null;
-   }
-
-   public function __set( $var, $value ) {
-      if( is_array($value) )
-         $this->data[$var] = new self($value);
+   public function __get( $key ) {
+      
+      $accessor = 'get' . ucfirst($key);
+      if( method_exists($this, $accessor) )
+         return $this->$accessor();
       else
-         $this->data[$var] = $value;
+         return isset($this->data[$key]) ? $this->data[$key] : null;
+      
    }
 
-   public function __isset( $var ) {
-      return isset($this->data[$var]);
+   public function __set( $key, $value ) {
+      
+      $mutator = 'set' . ucfirst($key);
+      if( method_exists($this, $mutator) ) {
+         $this->$mutator($value); 
+      }
+      else {
+         $value = is_array($value) ? new self($value) : $value;
+         // append syntax support - $key will be null
+         if( $key === null )
+            $this->data[]  = $value;
+         else
+            $this->data[$key]  = $value;
+      }
+      
    }
 
-   public function __unset( $var ) {
-      unset($this->data[$var]);
+   public function __isset( $key ) {
+      return isset($this->data[$key]);
+   }
+
+   public function __unset( $key ) {
+      unset($this->data[$key]);
    }
 
    // *** ArrayAccess methods

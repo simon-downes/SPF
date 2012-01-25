@@ -25,6 +25,7 @@ class Fieldset extends \spf\core\Object {
       $defaults = array(
          'default'  => null,
          'nullable' => false,
+         'db_field' => $name,
       );
       
       // merge into single array
