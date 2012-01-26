@@ -18,16 +18,16 @@ class Native extends \spf\view\View {
    }
    
    public function display( $view ) {
-      extract($this->data);
-      include(SPF_VIEW_PATH. "/{$view}.php");
+      echo $this->render($view);
    }
 
-   public function fetch( $view ) {
+   public function render( $view ) {
       
 		ob_start();
 
 		try {
-		   $this->display($view);
+         extract($this->data);
+         include(SPF_VIEW_PATH. "/{$view}.php");
 		}
 		catch( \Exception $e ) {
 			ob_end_clean();      // delete the output buffer
@@ -36,7 +36,7 @@ class Native extends \spf\view\View {
 		
       return ob_get_clean();
       
-   } // fetch
+   } // render
 
 }
 

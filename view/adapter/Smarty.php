@@ -48,7 +48,7 @@ class Smarty extends\spf\view\View {
       $this->smarty->display($view. '.tpl');
    }
 
-   public function fetch( $view ) {
+   public function render( $view ) {
       return $this->smarty->fetch($view. '.tpl');
    }
 

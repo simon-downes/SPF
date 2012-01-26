@@ -51,6 +51,14 @@ abstract class View {
    abstract public function exists( $view );
    
    /**
+    * Returns the view output.
+    *
+    * @param   string    $view   the view whose output to fetch.
+    * @return  string
+    */
+   abstract public function render( $view );
+   
+   /**
     * Displays the specified view.
     *
     * @param   string    $view   the view to display.
@@ -58,14 +66,6 @@ abstract class View {
     */
    abstract public function display( $view );
 
-   /**
-    * Returns the view output.
-    *
-    * @param   string    $view   the view whose output to fetch.
-    * @return  string
-    */
-   abstract public function fetch( $view );
-   
 }
 
 // EOF

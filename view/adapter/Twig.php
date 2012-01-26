@@ -11,9 +11,9 @@ class Twig extends \spf\view\View {
       parent::__construct();
 
       $this->twig = new \Twig_Environment(
-         new \Twig_Loader_Filesystem(YOLK_VIEW_PATH),
+         new \Twig_Loader_Filesystem(SPF_VIEW_PATH),
          array(
-            'cache' => YOLK_CACHE_PATH. '/views',
+            'cache' => SPF_CACHE_PATH. '/views',
             'auto_reload' => true,
          )
       );
@@ -21,7 +21,7 @@ class Twig extends \spf\view\View {
    }
 
    public function exists( $view ) {
-      return file_exists(YOLK_VIEW_PATH. "/{$view}.html");
+      return file_exists(SPF_VIEW_PATH. "/{$view}.html");
    }
 
    public function display( $view ) {
