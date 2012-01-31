@@ -31,20 +31,27 @@ class ModelFactory extends \spf\core\BaseFactory {
    
    public function mapper( $name ) {
       
-      if( !isset($this->services['db.default']) )
-         throw new \spf\data\Exception('No default database');
+      // TODO: only one mapper instance of each name, store in services
+      if( !isset($this->services["model.mapper.{$name}"]) ) {
       
-      $class = SPF_APP_NAMESPACE. "\\models\\{$name}Mapper";
+         if( !isset($this->services['db.default']) )
+            throw new \spf\data\Exception('No default database');
+         
+         $class = SPF_APP_NAMESPACE. "\\models\\{$name}Mapper";
+         
+         $mapper = new $class(
+            $this->services['db.default'],
+            $this->services['model.map']
+         );
+         
+         $mapper->inject('profiler', $this->services['profiler']);
+         $mapper->inject('models', $this->services['models']);
+         
+         $this->services["model.mapper.{$name}"] = $mapper;
+         
+      }
       
-      $mapper = new $class(
-         $this->services['db.default'],
-         $this->services['model.map']
-      );
-      
-      $mapper->inject('profiler', $this->services['profiler']);
-      $mapper->inject('models', $this->services['models']);
-      
-      return $mapper;
+      return $this->services["model.mapper.{$name}"];
       
    } // mapper
    

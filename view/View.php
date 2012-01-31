@@ -15,8 +15,12 @@ abstract class View {
    
    protected $profiler;
    
-   protected $data = array();
-   
+   protected $data;
+
+   public function __construct() {
+      $this->data = array();
+   }
+
    public function inject( $name, $service ) {
       
       if( !property_exists($this, $name) )

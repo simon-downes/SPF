@@ -13,6 +13,8 @@ namespace spf\model;
 
 class Entity extends \spf\core\Object {
    
+   protected $original;
+   
    protected $dirty;
    
    protected $errors;
@@ -58,18 +60,46 @@ class Entity extends \spf\core\Object {
          $this->$key = $value;
       }
 
-      $this->dirty = array();
+      $this->original = $this->data;
+
+      $this->mark_clean();
 
       return $this;
 
    }
 
    public function is_dirty( $key ) {
-      return isset($this->dirty[$key]) && $this->dirty[$key];
+      if( $key === null )
+         return count($this->dirty) > 0;
+      else
+         return isset($this->dirty[$key]) && $this->dirty[$key];
    }
 
+   public function mark_clean( $key = null ) {
+      if( $key === null ) {
+         $this->dirty    = array();
+         $this->original = $this->data;
+      }
+      else {
+         unset($this->dirty[$key]);
+         if( isset($this->data[$key]) )
+            $this->original[$key] = $this->data[$key];
+         else
+            unset($this->original[$key]);
+      }
+   }
+	
    public function has_id() {
       return !empty($this->id) && empty($this->errors['id']);
+   }
+
+   public function get_map_id() {
+      $class = explode('\\', get_class($this));
+      return end($class). '.'. $this->id;
+   }
+
+   public function get_errors() {
+      return $this->errors;
    }
 
    public function __set( $key, $value ) {
@@ -77,18 +107,40 @@ class Entity extends \spf\core\Object {
       // id is immutable once set - i.e. can only be set once
       if( ($key == 'id') && $this->has_id() )
          throw new Exception('Property \'id\' is immutable');
-      
+
       unset($this->errors[$key]);
-      
-      $this->dirty[$key] = isset($this->data[$key]) && ($this->data[$key] != $value);
-      
-      if( isset($this->fields[$key]) ) {
+
+      if( isset($this->original[$key]) )
+         $previous_value = $this->original[$key];
+      elseif( isset($this->data[$key]) )
+         $previous_value = $this->data[$key];
+      else
+         $previous_value = null;
+
+      // if a mutator (setter) exists then let it handle the assignment and any validation
+      $mutator = 'set_'. $key;
+      if( method_exists($this, $mutator) ) {
+         $this->$mutator($value); 
+      }
+      // if property is defined then validate it
+      elseif( isset($this->fields[$key]) ) {
          $this->data[$key] = $this->validate($key, $value);
       }
+      // just do the assignment
       else {
-         $this->data[$key] = $value;
+         // arrays are converted to spf\core\Object instances
+         $value = is_array($value) ? new parent($value) : $value;
+         // append syntax support - $key will be null
+         if( $key === null )
+            $this->data[] = $value;
+         else
+            $this->data[$key] = $value;
       }
-      
+
+      if( $key !== null ) {
+         $this->dirty[$key] = ($this->data[$key] != $previous_value);
+      }
+
    }
 
    public function __unset( $key ) {
@@ -100,11 +152,11 @@ class Entity extends \spf\core\Object {
       
       $field = $this->fields[$key];
       
-      if( ($value === null) && !$field->nullable ) {
-         $this->errors[$key] = 'null';
-      }
-      elseif( !$value && $field->required ) {
+      if( !$value && $field->required ) {
          $this->errors[$key] = 'required';
+      }
+      elseif( ($value === null) && !$field->nullable ) {
+         $this->errors[$key] = 'null';
       }
       else {
          // validation methods are named as the type prefixed with an underscore
@@ -193,14 +245,15 @@ class Entity extends \spf\core\Object {
    
    protected function _ip( $key, $value ) {
       // if integer then convert to string
-      $value = filter_var($value, FILTER_VALIDATE_INT);
-      if( $value !== false )
-         $value = long2ip($value);
+      $ip = filter_var($value, FILTER_VALIDATE_INT);
+      if( $ip !== false )
+         $value = long2ip($ip);
 
       $value = filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
       if( $value === false )
          $this->errors[$key] = 'ip';
-      
+      if( ($value == '0.0.0.0') && $this->fields[$key]->required )
+			$this->errors[$key] = 'required';
       return $value;
    }
    

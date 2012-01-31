@@ -149,7 +149,7 @@ class Response extends \spf\app\Response {
       }
       
       foreach ($this->cookies as $name => $cookie) {
-         setcookie($name, $cookie['value'], $cookie['expires']);
+         setcookie($name, $cookie['value'], $cookie['expires'], SPF_WEB_PATH. '/');
       }
 
       echo $this->body;

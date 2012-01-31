@@ -37,7 +37,7 @@ class Autoloader {
       $prefix = trim($prefix);
       
       if( !$path )
-         $path = YOLK_LIBS_PATH;
+         $path = SPF_LIB_PATH;
       
       static::$prefixes[$prefix] = rtrim($path, DIRECTORY_SEPARATOR);
       

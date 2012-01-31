@@ -20,11 +20,14 @@ abstract class DataMapper {
 
    protected $map;
    
+   protected $fields;
+   
    protected $models;
 
-   public function __construct( $db, $map ) {
+   public function __construct( $db, $map, $fields = array() ) {
       $this->db     = $db;
       $this->map    = $map;
+      $this->fields = $fields;
    }	
 
    public function inject( $name, $service ) {
@@ -41,22 +44,36 @@ abstract class DataMapper {
       
    }
    
+   public function create( $data = array() ) {
+      return new Entity($data);
+   }
+
    public function save( $entity ) {
       if( $entity->has_id() )
          $this->update($entity);
       else
          $this->insert($entity);
    }
-   
+
+   public function find_first( $filter = array() ) {
+      return ($entities = $this->find($filter)) ? reset($entities) : false;
+   }
+
+   public function find_by_id( $id ) {
+      return $this->find_first(array('id' => $id));
+   }
+
+   abstract public function count( $filter = array() );
+
+   abstract public function find( $filter = array() );
+
+   abstract public function load( $id );
+
    abstract public function insert( $entity );
 
    abstract public function update( $entity );
 
    abstract public function delete( $entity );
-
-   abstract public function find( $filter = array() );
-
-   abstract public function count( $filter = array() );
 
 }
 

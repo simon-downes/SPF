@@ -15,20 +15,11 @@ class ViewFactory extends \spf\core\BaseFactory {
    
    public function create( $type = '' ) {
       
-      switch( $type ) {
-         case 'native':
-            $adapter = 'Native';
-            break;
-         
-         case 'smarty':
-            $adapter = 'Smarty';
-            break;
-         
-         default:
-            throw new Exception("Adapter not supported: {$type}");
-      }
+      $adapter = ucfirst($type);
       
-      $class = "\\spf\\view\\adapter\\{$adapter}";
+      if( !class_exists($class = "\\spf\\view\\adapter\\{$adapter}" ) )
+         throw new Exception("Adapter not supported: {$type}");
+      
       $view = new $class();
       
       // add default services

@@ -54,7 +54,7 @@ class Object implements \ArrayAccess, \Iterator, \Countable {
 
    public function __get( $key ) {
       
-      $accessor = 'get' . ucfirst($key);
+      $accessor = 'get_'. $key;
       if( method_exists($this, $accessor) )
          return $this->$accessor();
       else
@@ -64,7 +64,7 @@ class Object implements \ArrayAccess, \Iterator, \Countable {
 
    public function __set( $key, $value ) {
       
-      $mutator = 'set' . ucfirst($key);
+      $mutator = 'set_'. $key;
       if( method_exists($this, $mutator) ) {
          $this->$mutator($value); 
       }
