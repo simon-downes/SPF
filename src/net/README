@@ -1,0 +1,43 @@
+
+
+https://github.com/auraphp/Aura.Http/blob/master/src/Aura/Http/Cookie.php
+
+
+headers	}
+cookies	}- Collection objects extending core\Object - override __get/set/unset/isset
+files	}
+
+headers - normalise keys to lowercase - store given name and value as tuple (array)
+cookies - key is name of cookie - value should be cookie object or string - strings get parsed to cookie objects
+		- expire($name) - sets the cookie as expired
+files 	- key is filename - value is uploaded file object or array - arrays get parsed to uploaded file objects
+
+\net\message
+	Common info needed to send a message across a network:
+		scheme
+		host
+		port
+		username
+		password
+		
+		data
+		
+\net\http\Message
+	Common info shared between http requests and responses
+		headers
+		cookies
+		data
+		
+		
+\net\http\Request
+	Also includes
+		path		}
+		query		}- Not needed by all messages
+		fragment	}
+		options
+		fragment
+		files
+		
+		
+
+\net\http\Response

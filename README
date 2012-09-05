@@ -1,0 +1,10 @@
+--------------------------------------------------------------------------------
+SPF - Si's PHP Framework
+--------------------------------------------------------------------------------
+
+Requires PHP 5.3+
+
+Does include the common building blocks of a web app/site.
+
+Doesn't include the kitchen sink.
+
