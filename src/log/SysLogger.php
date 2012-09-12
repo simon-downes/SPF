@@ -9,7 +9,7 @@
  * https://github.com/simon-downes/spf
  */
 
-namespace yolk\log;
+namespace spf\log;
 
 /**
  * Provides logging to syslog.
