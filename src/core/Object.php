@@ -48,6 +48,8 @@ class Object {
 	}
 
 	public function toArray() {
+		// TODO: convert object/array values to arrays
+		// http://stackoverflow.com/questions/6836592/serializing-php-object-to-json
 		return $this->_data;
 	}
 

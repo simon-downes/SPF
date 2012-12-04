@@ -32,6 +32,8 @@ require SPF_PATH. '/core/Autoloader.php';
 // framework class map - not technically needed but here for a little performance boost
 \spf\core\Autoloader::addClasses( array(
 
+	'Pimple' => SPF_PATH. '/core/Pimple.php',
+
 	'spf\\core\\Object'      => SPF_PATH. '/core/Object.php',
 
 	// TODO: class map
@@ -40,7 +42,7 @@ require SPF_PATH. '/core/Autoloader.php';
 
 \spf\core\Autoloader::register();
 
-// convert errors to exceptions
+// convert errors to exceptions - we shouldn't be generating any errors
 set_error_handler(
 	function( $severity, $message, $file, $line ) {
 		echo "$message - $file - $line\n"; return;
@@ -48,13 +50,14 @@ set_error_handler(
 	}
 );
 
-// fallback exception handler - catches errors/exceptions outside of the try/catch block in Application::run()
+// fallback exception handler
 set_exception_handler(
 	function( $error ) {
 		if( SPF_CLI ) {
 			d($error);
 		}
 		else {
+			// TODO: check SPF_DEBUG and view directory for appropriate template?
 			header("HTTP/1.0 503 Internal Server Error");
 			include SPF_PATH. '/core/Exception.html.php';      
 		}
@@ -67,6 +70,7 @@ register_shutdown_function(
 		$flags = E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR;   // fatal error flags
 		$fatal = ($error = error_get_last()) && ($flags & $error['type']);
 		if( $fatal && !SPF_CLI ) {
+			// TODO: check SPF_DEBUG and view directory for appropriate template?
 			header("HTTP/1.0 503 Internal Server Error");
 			include SPF_PATH. '/core/Exception.html.php';
 		}

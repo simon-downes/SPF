@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2012 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -57,6 +57,32 @@ class Autoloader {
 			static::$fallback_dirs = array_merge($dirs, static::$fallback_dirs);
 		else
 			static::$fallback_dirs = array_merge(static::$fallback_dirs, $dirs);
+	}
+
+	public static function add( array $data ) {
+		
+		if( !$data )
+			return;
+		
+		$data += array(
+			'namespaces' => array(),
+			'classes'    => array(),
+			'prefixes'   => array(),
+			'fallbacks'  => array(),
+		);
+		
+		foreach( $data['namespaces'] as $ns => $path ) {
+			static::addNamespace($ns, $path);
+		}
+		
+		foreach( $data['prefixes'] as $prexfix => $path ) {
+			static::addPrefix($prexfix, $path);
+		}
+		
+		static::addClasses($data['classes']);
+	
+		static::addFallbackDirs($data['fallbacks']);
+		
 	}
 
 	public static function load( $class ) {
