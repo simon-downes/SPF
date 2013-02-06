@@ -32,7 +32,9 @@ class Services extends \Pimple {
 			$exists = true;
 
 		elseif( isset($this->values['config']) && ($this['config'] instanceof \spf\core\Config) ) {
-			list($type, $name) = explode('.', $id, 2);
+			$type = '';
+			if( strpos($id, '.') )
+				list($type, $name) = explode('.', $id, 2);
 			switch( $type ) {
 				case 'log':
 					$exists = $this['config']->has("logs.{$name}");
@@ -56,7 +58,9 @@ class Services extends \Pimple {
 
 			if( isset($this->values['config']) && ($this['config'] instanceof \spf\core\Config) ) {
 				// if $id is a shortcut to logger or database that isn't defined then check for a definition in config and create it
-				list($type, $name) = explode('.', $id, 2);
+				$type = '';
+				if( strpos($id, '.') )
+					list($type, $name) = explode('.', $id, 2);
 				switch( $type ) {
 					case 'log':
 						if( $config = $this['config']->get("logs.{$name}") ) {
