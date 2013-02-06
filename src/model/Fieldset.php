@@ -11,7 +11,7 @@
 
 namespace spf\model;
 
-class Fieldset extends \spf\core\Immutable implements \Iterator, \Countable {
+class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Countable {
 
 	// numeric types
 	const TYPE_INTEGER  = 'integer';
@@ -72,10 +72,10 @@ class Fieldset extends \spf\core\Immutable implements \Iterator, \Countable {
 		$values = array();
 		$errors = array();
 		
-		foreach( $data as $k => $v ) {
-			list($v, $error) = $this->validate($k, $v);
-			$values[$k] = $v;
-			$errors[$k] = $error;
+		foreach( $data as $field => $value ) {
+			list($value, $error) = $this->validate($field, $value);
+			$values[$field] = $value;
+			$errors[$field] = $error;
 		}
 	
 		return array($values, $errors);
@@ -85,9 +85,10 @@ class Fieldset extends \spf\core\Immutable implements \Iterator, \Countable {
 	
 	public function validate( $field, $value ) {
 
-		if( !($field = $this->$field) )
+		if( !isset($this->$field) )
 			throw new Exception("Field Not Defined: '{$field}'");
-
+		
+		$field = $this->$field;
 		$error = false;
 
 		if( !$value && $field->required ) {
@@ -137,6 +138,9 @@ class Fieldset extends \spf\core\Immutable implements \Iterator, \Countable {
 					break;
 
 				case self::TYPE_TEXT:
+					$value = trim((string) $value);
+					break;
+
 				case self::TYPE_BLOB:
 					$value = (string) $value;
 					break;
@@ -165,37 +169,27 @@ class Fieldset extends \spf\core\Immutable implements \Iterator, \Countable {
 
 	}
 
-	// *** Iterator methods
-
-	public function rewind() {
-		return reset($this->_data);
+	/**
+	 * Returns an iterator for parameters.
+	 *
+	 * @return \ArrayIterator   An \ArrayIterator instance
+	 */
+	public function getIterator() {
+		return new \ArrayIterator($this->_data);
 	}
 
-	public function current() {
-		return current($this->_data);
-	}
-
-	public function key() {
-		return key($this->_data);
-	}
-
-	public function next() {
-		return next($this->_data);
-	}
-
-	public function valid() {
-		return key($this->_data) !== null;
-	}
-
-	// *** Countable methods
-
+	/**
+	 * Returns the number of items in the fieldset.
+	 *
+	 * @return int
+	 */
 	public function count() {
 		return count($this->_data);
 	}
 
-	protected function getEmptyValue() {
+	protected function getEmptyValue( $type ) {
 
-		switch( $this->type ) {
+		switch( $type ) {
 			case self::TYPE_INTEGER:
 			case self::TYPE_FLOAT:
 				$empty = 0;
