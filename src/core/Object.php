@@ -41,8 +41,8 @@ class Object {
 	public function __construct( $data = array() ) {
 		// getters and setters are defined in the constructors of subclasses
 		// as an array of keys and method names, e.g. 'name' => 'getName'
-		$this->_getters = array();
-		$this->_setters = array();
+		$this->_getters || $this->_getters = array();
+		$this->_setters || $this->_setters = array();
 		$this->clear();
 		if( $data )
 			$this->set($data);

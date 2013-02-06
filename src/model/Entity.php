@@ -19,7 +19,18 @@ abstract class Entity extends \spf\core\Object {
 
 	protected $_fields;		// instance of \spf\model\Fieldset to describe the Entity's schema
 
-	abstract public static function getFields( $fieldset );
+	// Subclasses should override this method and initialise the Fieldset with
+	// the entity's field definitions - if the Fieldset is empty.
+	// Providing this as a static method enables us to extract the field definitions of an
+	// entity without having to actually create an instance of the entity.
+	public static function getFields( $fieldset ) {
+
+		if( !($fieldset instanceof Fieldset) )
+			throw new Exception("Not a valid fieldset: {$fieldset}");
+
+		return $fieldset;
+
+	}
 
 	public function __construct( $data = array(), $fields = array() ) {
 
@@ -28,7 +39,7 @@ abstract class Entity extends \spf\core\Object {
 
 		$this->_fields = $fields;
 
-		parent::__construct($data);
+		$this->build($data);
 
 	}
 
