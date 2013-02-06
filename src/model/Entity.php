@@ -11,17 +11,19 @@
 
 namespace spf\model;
 
-class Entity extends \spf\core\Object {
-	
+abstract class Entity extends \spf\core\Object {
+
 	protected $_updated;	// array of updated values
-	
+
 	protected $_errors;		// array of errors
 
 	protected $_fields;		// instance of \spf\model\Fieldset to describe the Entity's schema
 
+	abstract public static function getFields( $fieldset );
+
 	public function __construct( $data = array(), $fields = array() ) {
 
-		if( ($fields !== array()) && !($fields instanceof Fieldset) )
+		if( !($fields instanceof Fieldset) )
 			throw new Exception("Not a valid fieldset: {$fields}");
 
 		$this->_fields = $fields;
@@ -80,6 +82,9 @@ class Entity extends \spf\core\Object {
 
 	public function __set( $key, $value ) {
 
+		if( $key === null )
+			throw new \InvalidArgumentException('NULL keys are not supported for '. __CLASS__ .' properties');
+
 		// id is immutable once set to a none empty value - i.e. can only be set once
 		if( ($key == 'id') && $this->hasId() )
 			throw new Exception('Property \'id\' is immutable');
@@ -97,13 +102,11 @@ class Entity extends \spf\core\Object {
 		}
 		// just do the assignment
 		else {
-			// arrays are converted to spf\core\Object instances
-			$value = is_array($value) ? new parent($value) : $value;
-			// append syntax support - $key is null
-			if( $key === null )
-				$this->_updated[] = $value;
-			else
-				$this->_updated[$key] = $value;
+			// arrays are converted to spf\core\Object or spf\core\Collection instances
+			if( is_array($value) ) {
+				$value = \spf\is_assoc($value) ? new \spf\core\Object($value) : \spf\core\Collection($value);
+			}
+			$this->_updated[$key] = $value;
 		}
 		
 	}
