@@ -38,11 +38,12 @@ class ObjectCollection extends Collection {
 	 * @return self
 	 */
 	public function add( array $items ) {
+		$class = $this->class;
 		$this->items = array_replace(
 			$this->items,
-			array_filter($items, function( $var ) {
-				return ($arr instanceof $this->class);
-			}
+			array_filter($items, function( $var ) use ( $class ) {
+				return ($var instanceof $class);
+			})
 		);
 		return $this;
 	}
