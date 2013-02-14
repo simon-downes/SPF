@@ -19,9 +19,39 @@ abstract class View {
 
 	protected $profiler;
 
+	protected $log;
+
 	public function __construct( array $config = array() ) {
 		$this->data = array();
 		$this->setExtension(isset($config['file_extension']) ? $config['file_extension'] : '');
+	}
+
+	/**
+	 * Inject a logger object.
+	 *
+	 * @param   \spf\log\Logger   $log
+	 * @return  self
+	 */
+	public function setLogger( $log ) {
+		if( $log instanceof \spf\log\Logger )
+			$this->log = $log;
+		else
+			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\log\\Logger, '. \spf\var_info($log). 'given');
+		return $this;
+	}
+
+	/**
+	 * Inject a profiler object.
+	 *
+	 * @param   \spf\util\Profiler   $profiler
+	 * @return  self
+	 */
+	public function setProfiler( $profiler ) {
+		if( $profiler instanceof \spf\util\Profiler )
+			$this->profiler = $profiler;
+		else
+			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\util\\Profiler, '. \spf\var_info($profiler). 'given');
+		return $this;
 	}
 
 	public function setExtension( $extension ) {
@@ -31,18 +61,6 @@ abstract class View {
 
 	public function getExtension() {
 		return $this->file_extension;
-	}
-
-	public function inject( $name, $service ) {
-
-		if( ($name == 'profiler') && !($service instanceof \spf\util\Profiler) )
-			throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\util\\Profiler");
-
-		else
-			throw new Exception(__CLASS__. "{$name} is not injectable");
-
-		$this->$name = $service;
-
 	}
 
 	public function assign( $var, $value ) {

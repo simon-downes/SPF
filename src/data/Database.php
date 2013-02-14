@@ -40,23 +40,46 @@ abstract class Database {
 
 	}
 
-	// Inject optional services that are not required for the object to be functional.
-	public function inject( $name, $service ) {
-		
-		if( ($name == 'cache') && !($service instanceof \spf\storage\Cache) )
-			throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\storage\\Cache");
-
-		elseif( ($name == 'log') && !($service instanceof \spf\log\Logger) )
-			throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\log\\Logger");
-
-		elseif( ($name == 'profiler') && !($service instanceof \spf\util\Profiler) )
-			throw new Exception(__CLASS__. "->{$name} must be an instance of \\spf\\util\\Profiler");
-		
+	/**
+	 * Inject a cache object.
+	 *
+	 * @param   \spf\storage\cache   $cache
+	 * @return  self
+	 */
+	public function setCache( $cache ) {
+		if( $cache instanceof \spf\storage\Cache )
+			$this->cache = $cache;
 		else
-			throw new Exception(__CLASS__. "{$name} is not injectable");
+			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\storage\\Cache, '. \spf\var_info($cache). 'given');
+		return $this;
+	}
 
-		$this->$name = $service;
+	/**
+	 * Inject a logger object.
+	 *
+	 * @param   \spf\log\Logger   $log
+	 * @return  self
+	 */
+	public function setLogger( $log ) {
+		if( $log instanceof \spf\log\Logger )
+			$this->log = $log;
+		else
+			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\log\\Logger, '. \spf\var_info($log). 'given');
+		return $this;
+	}
 
+	/**
+	 * Inject a profiler object.
+	 *
+	 * @param   \spf\util\Profiler   $profiler
+	 * @return  self
+	 */
+	public function setProfiler( $profiler ) {
+		if( $profiler instanceof \spf\util\Profiler )
+			$this->profiler = $profiler;
+		else
+			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\util\\Profiler, '. \spf\var_info($profiler). 'given');
+		return $this;
 	}
 
 	/**
