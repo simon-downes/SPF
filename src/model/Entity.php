@@ -32,12 +32,33 @@ abstract class Entity extends \spf\core\Object {
 
 	}
 
-	public function __construct( $data = array(), $fields = array() ) {
+	// returns the key to use for this class in the IdentityMap
+	// default is the full class name with first letter of sub-namespaces capitalised
+	// e.g. \site\module\user -> SiteModuleUser
+	public static function getMapKey() {
+		
+		static $key;
+		
+		if( !$key ) {
+			$key = implode(
+				'',
+				array_map(
+					'ucfirst', 
+					explode('\\', get_called_class())
+				)
+			);
+		}
+		
+		return $key;
+		
+	}
+
+	public function __construct( $fields, $data = array() ) {
 
 		if( !($fields instanceof Fieldset) )
 			throw new Exception("Not a valid fieldset: {$fields}");
 
-		$this->_fields = $fields;
+		$this->_fields = static::getFields($fields);
 
 		$this->build($data);
 
@@ -54,7 +75,7 @@ abstract class Entity extends \spf\core\Object {
 
 		$this->clear();
 
-		if( !(is_array($data) || $data instanceof Traversable) );
+		if( !(is_array($data) || $data instanceof Traversable) )
 			throw new Exception("Not traversable: {$data}");
 
 		// loop defined fields and assign value from data or default value
@@ -79,6 +100,10 @@ abstract class Entity extends \spf\core\Object {
 		foreach( $data as $key => $value ) {
 			$this->__set($key, $value);
 		}
+
+		// make the values we've just assigned the original values
+		$this->_data = $this->_updated;
+		$this->_updated = array();
 
 		return $this;
 
@@ -115,8 +140,10 @@ abstract class Entity extends \spf\core\Object {
 			$this->{$this->_setters[$key]}($value);
 		}
 		// if field is defined then validate it
-		elseif( isset($this->fields[$key]) ) {
-			list($this->_updated[$key], $this->_errors[$key]) = $this->fields->validate($key, $value);
+		elseif( isset($this->_fields[$key]) ) {
+			list($this->_updated[$key], $error) = $this->_fields->validate($key, $value);
+			if( $error )
+				$this->_errors[$key] = $error;
 		}
 		// just do the assignment
 		else {
@@ -142,8 +169,7 @@ abstract class Entity extends \spf\core\Object {
 	}
 
 	public function getMapId() {
-		$class = explode('\\', get_class($this));
-		return end($class). '.'. $this->id;
+		return static::getMapKey(). '.'. $this->id;
 	}
 
 	public function getErrors( $key ) {
@@ -166,13 +192,13 @@ abstract class Entity extends \spf\core\Object {
 		if( !func_num_args() ) {
 			$dirty = array();
 			foreach( $this->_updated as $k => $v ) {
-				if( !array_key_exists($this->_data, $k) || ($v != $this->_data[$k]) )
+				if( !array_key_exists($k, $this->_data) || ($v != $this->_data[$k]) )
 					$dirty[] = $k;
 			}
 			return $dirty;
 		}
-		elseif( array_key_exists($this->_updated, $key) ) {
-			return !array_key_exists($this->_data, $k) || ($this->_updated[$key] != $this->_data[$k]) )
+		elseif( array_key_exists($key, $this->_updated) ) {
+			return !array_key_exists($k, $this->_data) || ($this->_updated[$key] != $this->_data[$k]);
 		}
 		else {
 			return false;
@@ -180,14 +206,14 @@ abstract class Entity extends \spf\core\Object {
 	}
 
 	public function markClean( $key = null ) {
-		if( !func_num_args( ) {
+		if( !func_num_args() ) {
 			foreach( $this->_updated as $k => $v ) {
 				$this->_data[$k] = $v;
 			}
 			$this->_updated = array();
 			$this->_errors  = array();
 		}
-		elseif( array_key_exists($this->_updated, $key) ) {
+		elseif( array_key_exists($key, $this->_updated) ) {
 			if( $this->_errors[$key] )
 				throw new Exception('Cannot mark '. get_class($this). "->{$key} as clean - has error '{$this->_errors[$key]}'");
 			$this->_data[$key] = $this->_updated[$key];

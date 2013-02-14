@@ -67,6 +67,15 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 	}
 
+	public function getDbField( $name ) {
+		if( !$this->_data[$name] )
+			throw new Exception("Field not defined: {$name}");
+		elseif( isset($this->_data[$name]->db_field) )
+			return $this->_data[$name]->db_field;
+		else
+			return $name;
+	}
+
 	public function validateAll( $data ) {
 		
 		$values = array();
@@ -100,7 +109,7 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		else {
 
 			// validate type
-			switch( $this->type ) {
+			switch( $field->type ) {
 				case self::TYPE_INTEGER:
 					list($value, $error) = $this->validateInteger($value);
 					break;
