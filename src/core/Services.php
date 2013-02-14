@@ -42,8 +42,9 @@ class Services extends \Pimple {
 				case 'db':
 					$exists = $this['config']->has("databases.{$name}");
 					break;
-				default:
-					$exists = false;
+				case 'cache':
+					$exists = $this['config']->has("caches.{$name}");
+					break;
 			}
 		}
 
@@ -52,12 +53,13 @@ class Services extends \Pimple {
 	}
 
 	public function offsetGet( $id ) {
+		
 		if( !array_key_exists($id, $this->values) ) {
 
 			$config = null;
 
 			if( isset($this->values['config']) && ($this['config'] instanceof \spf\core\Config) ) {
-				// if $id is a shortcut to logger or database that isn't defined then check for a definition in config and create it
+				// if $id is a shortcut to a logger, database or cache that isn't defined then check for a definition in config and create it
 				$type = '';
 				if( strpos($id, '.') )
 					list($type, $name) = explode('.', $id, 2);
@@ -70,10 +72,16 @@ class Services extends \Pimple {
 						}
 						break;
 					case 'db':
-						
 						if( $config = $this['config']->get("databases.{$name}") ) {
 							$this[$id] = $this->share(function( $services ) use ($config) {
 								return $services->database($config);
+							});
+						}
+						break;
+					case 'cache':
+						if( $config = $this['config']->get("caches.{$name}") ) {
+							$this[$id] = $this->share(function( $services ) use ($config) {
+								return $services->cache($config);
 							});
 						}
 						break;
@@ -133,9 +141,10 @@ class Services extends \Pimple {
 		$class = "\\spf\\data\\adapter\\{$adapter}";
 		$db = new $class($config);
 
-		// add default services
-		isset($this['profiler'])  && $db->inject('profiler', $this['profiler']);
-		isset($this['log.query']) && $db->inject('log', $this['log.query']);
+		// inject default services
+		isset($this['cache'])    && $db->setCache($this['cache']);
+		isset($this['logger'])   && $db->setLogger($this['logger']);
+		isset($this['profiler']) && $db->setProfiler($this['profiler']);
 
 		return $db;
 
@@ -171,6 +180,10 @@ class Services extends \Pimple {
 
 	}
 
+	public function cache( $config ) {
+		throw new Exception(__CLASS__. '::'. __METHOD__. ' not implemented');
+	}
+
 	public function view( $type ) {
 
 		$adapter = ucfirst(strtolower($type));
@@ -180,8 +193,9 @@ class Services extends \Pimple {
 
 		$view = new $class();
 
-		// add default services
-		isset($this['profiler']) && $view->inject('profiler', $this['profiler']);
+		// inject default services
+		isset($this['logger'])   && $db->setLogger($this['logger']);
+		isset($this['profiler']) && $db->setProfiler($this['profiler']);
 
 		return $view;
 
