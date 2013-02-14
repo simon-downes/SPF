@@ -66,6 +66,24 @@ class Collection implements \IteratorAggregate, \Countable {
 	}
 	
 	/**
+	 * Return the first item in the collection.
+	 *
+	 * @return mixed
+	 */
+	public function first() {
+		return reset($this->items);
+	}
+	
+	/**
+	 * Return the last item in the collection.
+	 *
+	 * @return mixed
+	 */
+	public function last() {
+		return end($this->items);
+	}
+	
+	/**
 	 * Return the keys contained in the collection.
 	 *
 	 * @return array
@@ -90,7 +108,7 @@ class Collection implements \IteratorAggregate, \Countable {
 	 *
 	 * @param  string   $key       The key to return the item for
 	 * @param  mixed    $default   The value returned if $key doesn't exist
-	 * @return boolean
+	 * @return mixed
 	 */
 	public function get( $key, $default = null ) {
 		return array_key_exists($key, $this->items) ? $this->items[$key] : $default;
