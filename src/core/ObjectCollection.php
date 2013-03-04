@@ -57,7 +57,7 @@ class ObjectCollection extends Collection {
 	 */
 	public function set( $key, $item ) {
         if( !($item instanceof $this->class) )
-        	throw new \InvalidArgumentException( ((string) $item). ' must be an instance of '. $this->class );
+        	throw new \InvalidArgumentException( \spf\var_info($item). ' must be an instance of '. $this->class );
         $this->items[$key] = $item;
         return $this;
 	}

@@ -110,6 +110,16 @@ function var_info( $var ) {
 	}
 }
 
+function assert_instance( $var, $class ) {
+	if( !is_object($var) || !($var instanceof $class) )
+		throw \InvalidArgumentException("Instance of {$class} expected, ". var_info($var). ' given');
+}
+
+function assert_interface( $var, $interface ) {
+	if( !is_object($var) || !($var implements $interface) )
+		throw \InvalidArgumentException(var_info($var). " does not implement {$interface}");
+}
+
 /**
  * Converts a string representation containing one or more of hours, minutes and seconds into a total number of seconds.
  * e.g. seconds("3 hours 4 minutes 10 seconds"), seconds("5min"), seconds("4.5h")
