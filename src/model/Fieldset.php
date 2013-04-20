@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2012 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2013 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -11,6 +11,10 @@
 
 namespace spf\model;
 
+/**
+ * A set of field definitions and associated validation rules.
+ * Fieldsets are used by Entities to provide structure and validation.
+ */
 class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Countable {
 
 	// numeric types
@@ -30,9 +34,14 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	const TYPE_URL      = 'url';
 
 	// binary types
-	const TYPE_BLOB     = 'blob';
+	const TYPE_BINARY   = 'binary';
+
+	// miscellaneous types
+	const TYPE_ENUM     = 'enum';
+	const TYPE_CUSTOM   = 'custom';
 
 	// errors
+	const ERROR_NONE     = false;
 	const ERROR_TYPE     = 'type';
 	const ERROR_REQUIRED = 'required';
 	const ERROR_NULL     = 'null';
@@ -40,15 +49,26 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	const ERROR_MAX      = 'max';
 	const ERROR_REGEX    = 'regex';
 	const ERROR_VALUE    = 'value';
+	const ERROR_EXISTS   = 'exists';
 
 	public function __construct() {
+		// pass an empty array as Fieldsets are a special kind of Immutable -
+		// we add fields after the object is created
 		parent::__construct(array());
 	}
 
+	/**
+	 * Add a new field definition.
+	 * @param  string   $name    name of the field
+	 * @param  string   $type    one of the Fieldset::TYPE_* constants or a string containing a custom type
+	 * @param  array    $rules   an array of validation rules
+	 * @return self
+	 */
 	public function add( $name, $type, $rules = array() ) {
 
 		// base item
 		$item = array(
+			'name' => $name,
 			'type' => $type,
 		);
 
@@ -63,20 +83,29 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		$rules += $defaults;
 		$item  += $rules;
 
+		if( !$name )
+			throw new \InvalidArgumentException('No field name specified');
+
+		if( !$type )
+			throw new \InvalidArgumentException("No type specified for '{$name}'");
+
+		if( ($type == static::TYPE_ENUM) && empty($item['values']) )
+			throw new \LogicException("No values specified for enum field '{$name}'");
+
 		$this->_data[$name] = new \spf\core\Immutable($item);
 
+		return $this;
+
 	}
 
-	public function getDbField( $name ) {
-		if( !$this->_data[$name] )
-			throw new Exception("Field not defined: {$name}");
-		elseif( isset($this->_data[$name]->db_field) )
-			return $this->_data[$name]->db_field;
-		else
-			return $name;
-	}
-
-	public function validateAll( $data ) {
+	/**
+	 * Validates an array of field names and values against the field definitions in this Fieldset.
+	 * The return value is an array containing an array of validated values, and an array of errors,
+	 * each indexed by field name.
+	 * @param  array   $data   the array to validate
+	 * @return array   the validates values and errors
+	 */
+	public function validateArray( $data ) {
 		
 		$values = array();
 		$errors = array();
@@ -90,15 +119,23 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		return array($values, $errors);
 		
 	}
-
 	
+	/**
+	 * Validates a value against a specified field definition.
+	 * The return value is an array containing the validated value and the error status (if any).
+	 * @param  string   $field   the field definition to use
+	 * @param  mixed    $value   the value to validate
+	 * @return array   the validated values and error
+	 */
 	public function validate( $field, $value ) {
 
 		if( !isset($this->$field) )
 			throw new Exception("Field Not Defined: '{$field}'");
 		
 		$field = $this->$field;
-		$error = false;
+		
+		$clean = $value;
+		$error = self::ERROR_NONE;
 
 		if( !$value && $field->required ) {
 			$error = self::ERROR_REQUIRED;
@@ -111,47 +148,47 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 			// validate type
 			switch( $field->type ) {
 				case self::TYPE_INTEGER:
-					list($value, $error) = $this->validateInteger($value);
+					list($clean, $error) = $this->validateInteger($value);
 					break;
 
 				case self::TYPE_FLOAT:
-					list($value, $error) = $this->validateFloat($value);
+					list($clean, $error) = $this->validateFloat($value);
 					break;
 
 				case self::TYPE_BOOLEAN:
-					list($value, $error) = $this->validateBoolean($value);
+					list($clean, $error) = $this->validateBoolean($value);
 					break;
 
 				case self::TYPE_DATETIME:
-					list($value, $error) = $this->validateDateTime($value, $field->required);
+					list($clean, $error) = $this->validateDateTime($value, $field->required);
 					break;
 
 				case self::TYPE_DATE:
-					list($value, $error) = $this->validateDate($value, $field->required);
+					list($clean, $error) = $this->validateDate($value, $field->required);
 					break;
 
 				case self::TYPE_TIME:
-					list($value, $error) = $this->validateTime($value, $field->required);
+					list($clean, $error) = $this->validateTime($value, $field->required);
 					break;
 
 				case self::TYPE_IP:
-					list($value, $error) = $this->validateIP($value);
+					list($clean, $error) = $this->validateIP($value, $field->required);
 					break;
 
 				case self::TYPE_EMAIL:
-					list($value, $error) = $this->validateEmail($value);
+					list($clean, $error) = $this->validateEmail($value);
 					break;
 
 				case self::TYPE_URL:
-					list($value, $error) = $this->validateURL($value);
+					list($clean, $error) = $this->validateURL($value);
 					break;
 
 				case self::TYPE_TEXT:
-					$value = trim((string) $value);
+					$clean = trim((string) $value);
 					break;
 
-				case self::TYPE_BLOB:
-					$value = (string) $value;
+				case self::TYPE_BINARY:
+					$clean = (string) $value;
 					break;
 
 				default:
@@ -160,21 +197,24 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 			}
 
-			if( isset($field->min) && ($value < $field->min) )
-				$error = self::ERROR_MIN;
+			if( !$error ) {
+				if( isset($field->min) && ($clean < $field->min) )
+					$error = self::ERROR_MIN;
 
-			elseif( isset($field->max) && ($value > $field->max) )
-				$error = self::ERROR_MAX;
+				elseif( isset($field->max) && ($clean > $field->max) )
+					$error = self::ERROR_MAX;
 
-			elseif( isset($field->regex) && !preg_match($field->regex, $value) )
-				$error = self::ERROR_REGEX;
+				elseif( isset($field->regex) && !preg_match($field->regex, $clean) )
+					$error = self::ERROR_REGEX;
 
-			elseif( isset($field->values) && !in_array($value, $field->values) )
-				$error = self::ERROR_VALUE;
-
+				elseif( isset($field->values) && !in_array($clean, $field->values) )
+					$error = self::ERROR_VALUE;
+			}
+			
 		}
 
-		return array($value, $error);
+		// if we have an error then return the original value
+		return $error ? array($value, $error) : array($clean, $error);
 
 	}
 
@@ -196,12 +236,21 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		return count($this->_data);
 	}
 
+	/**
+	 * Returns the default value for the specified field type.
+	 * @param  string   $type
+	 * @return mixed
+	 */
 	protected function getEmptyValue( $type ) {
 
 		switch( $type ) {
 			case self::TYPE_INTEGER:
 			case self::TYPE_FLOAT:
 				$empty = 0;
+				break;
+
+			case self::TYPE_BOOLEAN:
+				$empty = false;
 				break;
 
 			case self::TYPE_DATETIME:
@@ -223,11 +272,10 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 			case self::TYPE_TEXT:
 			case self::TYPE_EMAIL:
 			case self::TYPE_URL:
-			case self::TYPE_BLOB:
+			case self::TYPE_BINARY:
 				$empty = '';
 				break;
 
-			case self::TYPE_BOOLEAN:
 			default:
 				$empty = null;
 				break;
@@ -237,21 +285,37 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 	}
 
+	/**
+	 * Validates a value as an integer.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateInteger( $value ) {
 		$value = filter_var($value, FILTER_VALIDATE_INT);
-		$error = ($value === false) ? self::ERROR_TYPE : false;
+		$error = ($value === false) ? self::ERROR_TYPE : self::ERROR_NONE;
 		return array($value, $error);
 	}
 
+	/**
+	 * Validates a value as a float.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateFloat( $value ) {
 		$value = filter_var($value, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND);
-		$error = ($value === false) ? self::ERROR_TYPE : false;
+		$error = ($value === false) ? self::ERROR_TYPE : self::ERROR_NONE;
 		return array($value, $error);
 	}
 
+	/**
+	 * Validates a value as a boolean.
+	 * Recognises the following string: "1", "true", "on" and "yes".
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateBoolean( $value ) {
 
-		$error = false;
+		$error = self::ERROR_NONE;
 
 		// FILTER_VALIDATE_BOOLEAN will return null if passed an actual boolean false
 		if( $value !== false ) {
@@ -264,9 +328,14 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 	}
 
-	protected function validateIP( $value ) {
+	/**
+	 * Validates a value as an ip4 address.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
+	protected function validateIP( $value, $required ) {
 
-		$error = false;
+		$error = self::ERROR_NONE;
 
 		// if integer then convert to string
 		$ip = filter_var($value, FILTER_VALIDATE_INT);
@@ -278,34 +347,49 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		if( $value === false )
 			$error = self::ERROR_TYPE;
 
-		if( ($value == '0.0.0.0') && $field->required )
+		if( ($value == '0.0.0.0') && $required )
 			$error = self::ERROR_REQUIRED;
 
 		return array($value, $error);
 
 	}
 
+	/**
+	 * Validates a value as an email address.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateEmail( $value ) {
 		// empty strings and nulls are allowed (otherwise they'd be caught by the required and nullable conditions)
 		if( !($value === '') && !($value === null) )
 			$value = filter_var($value, FILTER_VALIDATE_EMAIL);
-		$error = ($value === false) ? self::ERROR_TYPE : false;
+		$error = ($value === false) ? self::ERROR_TYPE : self::ERROR_NONE;
 		return array($value, $error);
 	}
 
+	/**
+	 * Validates a value as a url.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateURL( $value ) {
 		// empty strings and nulls are allowed (otherwise they'd be caught by the required and nullable conditions)
 		if( !($value === '') && !($value === null) )
 			$value = filter_var($value, FILTER_VALIDATE_URL);
-		$error = ($value === false) ? self::ERROR_TYPE : false;
+		$error = ($value === false) ? self::ERROR_TYPE : self::ERROR_NONE;
 		return array($value, $error);
 	}
 
+	/**
+	 * Validates a value as a datetime.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateDateTime( $value, $required, $format = 'Y-m-d H:i:s', $null_date = '0000-00-00 00:00:00' ) {
 
 		// special case for null dates as they can't be converted to a timestamp
 		if( substr($value, 0, 10) == '0000-00-00' ) {
-			$error = $required ? 'required' : false;
+			$error = $required ? 'required' : self::ERROR_NONE;
 			return array($null_date, $error);
 		}
 
@@ -319,17 +403,27 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		}
 		else {
 			$value = date($format, $ts);
-			$error = false;
+			$error = self::ERROR_NONE;
 		}
 
 		return array($value, $error);
 
 	}
 
+	/**
+	 * Validates a value as a date.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateDate( $value, $required ) {
 		return $this->validateDateTime($value, $required, 'Y-m-d', '0000-00-00');
 	}
 
+	/**
+	 * Validates a value as a time.
+	 * @param  mixed   $value
+	 * @return array   an array containing the validated value and an error status.
+	 */
 	protected function validateTime( $value, $required ) {
 		return $this->validateDateTime($value, $required, 'H:i:s', '00:00:00');
 	}
