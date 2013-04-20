@@ -18,8 +18,8 @@ class Exception extends \Exception {
 
 	protected $data = array();
 
-	public function __construct( $message = 'Unknown Error', $code = 0 ) {
-		parent::__construct($message, $code);
+	public function __construct( $message = 'Unknown Error', $code = 0, $previous = null ) {
+		parent::__construct($message, (int) $code, $previous);
 	}
 
 	/**

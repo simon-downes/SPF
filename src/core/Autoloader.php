@@ -156,6 +156,19 @@ class Autoloader {
 		spl_autoload_register(array(__CLASS__, 'load'));
 	}
 
+	/**
+	 * Return an array of currently registered items.
+	 * @return array
+	 */
+	public static function status() {
+		return array(
+			'namespaces' => static::$namespaces,
+			'classes'    => static::$classes,
+			'prefixes'   => static::$prefixes,
+			'fallbacks'  => static::$fallback_dirs,
+		);
+	}
+
 }
 
 // EOF

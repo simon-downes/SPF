@@ -1,4 +1,13 @@
 <?php
+/*
+ * This file is part of SPF.
+ *
+ * Copyright (c) 2012 Simon Downes <simon@simondownes.co.uk>
+ * 
+ * Distributed under the MIT License, a copy of which is available in the
+ * LICENSE file that was bundled with this package, or online at:
+ * https://github.com/simon-downes/spf
+ */
 
 namespace spf\core;
 
@@ -8,7 +17,7 @@ namespace spf\core;
  * custom PHP script or a completely different framework.
  *
  * It contains factory methods for various objects such as databases, logs, viws, etc.
- * 
+ *
  */
 class Services extends \Pimple {
 
@@ -139,7 +148,7 @@ class Services extends \Pimple {
 		}
 
 		$class = "\\spf\\data\\adapter\\{$adapter}";
-		$db = new $class($config);
+		$db    = new $class($config);
 
 		// inject default services
 		isset($this['cache'])    && $db->setCache($this['cache']);
@@ -194,8 +203,8 @@ class Services extends \Pimple {
 		$view = new $class();
 
 		// inject default services
-		isset($this['logger'])   && $db->setLogger($this['logger']);
-		isset($this['profiler']) && $db->setProfiler($this['profiler']);
+		isset($this['logger'])   && $view->setLogger($this['logger']);
+		isset($this['profiler']) && $view->setProfiler($this['profiler']);
 
 		return $view;
 

@@ -65,10 +65,10 @@ class Object {
 	 */
 	public function set( $data ) {
 
-		if( !(is_array($data) || $data instanceof Traversable) );
+		if( !(is_array($data) || $data instanceof \Traversable) )
 			throw new Exception('Not traversable: '. \spf\var_info($data));
 
-		foreach( $values as $k => $v ) {
+		foreach( $data as $k => $v ) {
 			$this->__set($k, $v);
 		}
 
