@@ -17,7 +17,7 @@ namespace spf\model;
  * via a Fieldset object, enforce datatypes on properties and determine if a value has changed.
  * The property 'id' is immutable once set (i.e. it can only be set once).
  */
-abstract class Entity extends \spf\core\Object {
+abstract class Entity extends \spf\core\CustomObject {
 
 	protected $_updated;	// array of updated values
 
@@ -147,7 +147,7 @@ abstract class Entity extends \spf\core\Object {
 		// remove all keys that aren't specified in the entity's fieldset
 		$fields = static::getFields();
 		foreach( array_keys($this->_data) as $k )	 {
-			if( !isset($fields[$k]) )
+			if( !isset($fields->$k) )
 				unset($this->_data[$k]);
 		}
 		return $this;
@@ -289,7 +289,7 @@ abstract class Entity extends \spf\core\Object {
 			$this->{$this->_setters[$key]}($value);
 		}
 		// if field is defined then validate it
-		elseif( isset($fields[$key]) ) {
+		elseif( isset($fields->$key) ) {
 			list($this->_updated[$key], $this->_errors[$key]) = $fields->validate($key, $value);
 			if( !$this->_errors[$key] ) unset($this->_errors[$key]);
 		}

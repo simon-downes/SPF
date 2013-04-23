@@ -219,7 +219,7 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	}
 
 	/**
-	 * Returns an iterator for parameters.
+	 * Returns an iterator for fields.
 	 *
 	 * @return \ArrayIterator   An \ArrayIterator instance
 	 */

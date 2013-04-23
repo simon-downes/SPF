@@ -135,7 +135,7 @@ class GenericMapper extends DataMapper {
 		// loop through all the modified fields
 		foreach( $entity->isDirty() as $field_name ) {
 			
-			$field = $this->fields[$field_name];
+			$field = $this->fields->$field_name;
 			
 			// don't update the id field
 			if( $field->name == 'id' )
