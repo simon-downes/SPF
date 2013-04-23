@@ -9,19 +9,14 @@
  * https://github.com/simon-downes/spf
  */
 
+namespace spf;
+
 error_reporting(E_ALL | E_STRICT);
 
-defined('SPF_START_TIME') || define('SPF_START_TIME', microtime(true));
+defined('SPF_START_TIME')   || define('SPF_START_TIME', microtime(true));
 defined('SPF_START_MEMORY') || define('SPF_START_MEMORY', memory_get_usage());
-
-defined('SPF_CLI') || define('SPF_CLI', defined('STDIN'));   // console or web environment?
-
-defined('SPF_PATH') || define('SPF_PATH', __DIR__);
-defined('SPF_LIBS_PATH') || define('SPF_LIBS_PATH', realpath(__DIR__. '/..'));
-
-// if running on a web server then work out the web root for the application
-if( !SPF_CLI )
-	defined('SPF_WEB_PATH') || define( 'SPF_WEB_PATH', str_replace('/'. pathinfo($_SERVER['PHP_SELF'], PATHINFO_BASENAME), '', $_SERVER['PHP_SELF']) );
+defined('SPF_CLI')          || define('SPF_CLI', defined('STDIN'));
+defined('SPF_PATH')         || define('SPF_PATH', __DIR__);
 
 require SPF_PATH. '/spf.php';
 

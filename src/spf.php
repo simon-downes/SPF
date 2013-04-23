@@ -120,6 +120,10 @@ function assert_interface( $var, $interface ) {
 		throw \InvalidArgumentException(var_info($var). " does not implement {$interface}");
 }
 
+function randomHex( $length = 40 ) {
+	return bin2hex(openssl_random_pseudo_bytes($length / 2));
+}
+
 /**
  * Converts a string representation containing one or more of hours, minutes and seconds into a total number of seconds.
  * e.g. seconds("3 hours 4 minutes 10 seconds"), seconds("5min"), seconds("4.5h")
