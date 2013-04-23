@@ -15,9 +15,7 @@ class Immutable extends Object {
 
 	public function __construct( $data ) {
 
-		$this->_data    = array();
-		$this->_getters = array();
-		$this->_setters = array();
+		$this->_data = array();
 
 		if( $data ) {
 			if( !(is_array($data) || $data instanceof Traversable) )

@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2012 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2013 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -12,7 +12,7 @@
 namespace spf\core;
 
 /**
- * A generic object that supports dynamic property access with custom getters and setters.
+ * A generic object that provides dynamic property access.
  *
  */
 class Object {
@@ -24,25 +24,7 @@ class Object {
 	 */
 	protected $_data;
 
-	/**
-	 * Array of getter functions.
-	 *
-	 * @var array
-	 */
-	protected $_getters;
-
-	/**
-	 * Array of setter functions.
-	 *
-	 * @var array
-	 */
-	protected $_setters;
-
 	public function __construct( $data = array() ) {
-		// getters and setters are defined in the constructors of subclasses
-		// as an array of keys and method names, e.g. 'name' => 'getName'
-		$this->_getters || $this->_getters = array();
-		$this->_setters || $this->_setters = array();
 		$this->clear();
 		if( $data )
 			$this->set($data);
@@ -65,10 +47,10 @@ class Object {
 	 */
 	public function set( $data ) {
 
-		if( !(is_array($data) || $data instanceof \Traversable) )
+		if( !(is_array($data) || $data instanceof Traversable) );
 			throw new Exception('Not traversable: '. \spf\var_info($data));
 
-		foreach( $data as $k => $v ) {
+		foreach( $values as $k => $v ) {
 			$this->__set($k, $v);
 		}
 
@@ -99,19 +81,11 @@ class Object {
 	// *** Dynamic property access methods
 
 	public function __get( $key ) {
-		if( isset($this->_getters[$key]) )
-			return $this->{$this->_getters[$key]}();
-		else
-			return isset($this->_data[$key]) ? $this->_data[$key] : null;
+		return isset($this->_data[$key]) ? $this->_data[$key] : null;
 	}
 
 	public function __set( $key, $value ) {
-		if( isset($this->_setters[$key]) ) {
-			$this->{$this->_setters[$key]}($value);
-		}
-		else {
-			$this->_data[$key] = $value;
-		}
+		$this->_data[$key] = $value;
 	}
 
 	public function __isset( $key ) {
