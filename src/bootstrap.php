@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2011-2013 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -16,20 +16,20 @@ error_reporting(E_ALL | E_STRICT);
 defined('SPF_START_TIME')   || define('SPF_START_TIME', microtime(true));
 defined('SPF_START_MEMORY') || define('SPF_START_MEMORY', memory_get_usage());
 defined('SPF_CLI')          || define('SPF_CLI', defined('STDIN'));
-defined('SPF_PATH')         || define('SPF_PATH', __DIR__);
+defined('SPF_DEBUG')        || define('SPF_DEBUG', true);
 
-require SPF_PATH. '/spf.php';
+require __DIR__. '/spf.php';
 
-require SPF_PATH. '/core/Autoloader.php';
+require __DIR__. '/core/Autoloader.php';
 
-\spf\core\Autoloader::addNamespace('spf', SPF_PATH);
+\spf\core\Autoloader::addNamespace('spf', __DIR__);
 
 // framework class map - not technically needed but here for a little performance boost
 \spf\core\Autoloader::addClasses( array(
 
-	'Pimple' => SPF_PATH. '/core/Pimple.php',
+	'Pimple' => __DIR__. '/core/Pimple.php',
 
-	'spf\\core\\Object'      => SPF_PATH. '/core/Object.php',
+	'spf\\core\\Object'      => __DIR__. '/core/Object.php',
 
 	// TODO: class map
 
@@ -54,7 +54,7 @@ set_exception_handler(
 		else {
 			// TODO: check SPF_DEBUG and view directory for appropriate template?
 			header("HTTP/1.0 503 Internal Server Error");
-			include SPF_PATH. '/core/Exception.html.php';      
+			include __DIR__. '/core/Exception.html.php';      
 		}
 	}
 );
@@ -67,7 +67,7 @@ register_shutdown_function(
 		if( $fatal && !SPF_CLI ) {
 			// TODO: check SPF_DEBUG and view directory for appropriate template?
 			header("HTTP/1.0 503 Internal Server Error");
-			include SPF_PATH. '/core/Exception.html.php';
+			include __DIR__. '/core/Exception.html.php';
 		}
 	}
 );
