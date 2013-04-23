@@ -28,6 +28,9 @@ class Services extends \Pimple {
 				'config' => $this->share(function( $services ) {
 					return new \spf\core\Config();
 				}),
+				'map' => $this->share(function( $services ) {
+					return new \spf\model\IdentityMap();
+				}),
 			)
 		);
 
