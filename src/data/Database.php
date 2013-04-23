@@ -201,8 +201,6 @@ abstract class Database {
 					}
 				
 					if( $caller ) {
-						if( defined('SPF_APP_PATH') )
-							$caller['file'] = str_replace(SPF_APP_PATH, '', $caller['file']);
 						$msg .= "\nFile: {$caller['file']}";
 						$msg .= isset($item['line']) ? "  Line: {$item['line']}\n" : "\n";
 					}
