@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2013 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -15,6 +15,8 @@ abstract class View {
 
 	protected $data;
 
+	protected $config;
+
 	protected $file_extension;
 
 	protected $profiler;
@@ -22,8 +24,24 @@ abstract class View {
 	protected $log;
 
 	public function __construct( array $config = array() ) {
+
 		$this->data = array();
-		$this->setExtension(isset($config['file_extension']) ? $config['file_extension'] : '');
+
+		$this->config = $config + array(
+			'file_extension' => 'html',
+			'view_path'      => '',
+			'cache_path'     => '',
+		);
+
+		if( !$this->config['file_extension'] )
+			throw new Exception('Missing configuration option: file_extension');
+
+		elseif( !$this->config['view_path'] )
+			throw new Exception('Missing configuration option: view_path');
+
+		elseif( !$this->config['cache_path'] )
+			throw new Exception('Missing configuration option: cache_path');
+
 	}
 
 	/**
@@ -33,10 +51,8 @@ abstract class View {
 	 * @return  self
 	 */
 	public function setLogger( $log ) {
-		if( $log instanceof \spf\log\Logger )
-			$this->log = $log;
-		else
-			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\log\\Logger, '. \spf\var_info($log). 'given');
+		($log !== null) || assert_instance($log, '\\spf\\log\\Logger');
+		$this->log = $log;
 		return $this;
 	}
 
@@ -47,20 +63,9 @@ abstract class View {
 	 * @return  self
 	 */
 	public function setProfiler( $profiler ) {
-		if( $profiler instanceof \spf\util\Profiler )
-			$this->profiler = $profiler;
-		else
-			throw new \InvalidArgumentException(__CLASS__. '::'. __METHOD__. ' expects \\spf\\util\\Profiler, '. \spf\var_info($profiler). 'given');
+		($profiler !== null) || assert_instance($profiler, '\\spf\\util\\Profiler');
+		$this->profiler = $profiler;
 		return $this;
-	}
-
-	public function setExtension( $extension ) {
-		$extension = trim($extension);
-		$this->file_extension = $extension ? $extension : 'html';
-	}
-
-	public function getExtension() {
-		return $this->file_extension;
 	}
 
 	public function assign( $var, $value ) {
@@ -69,14 +74,14 @@ abstract class View {
 	}
 
 	public function exists( $view ) {
-		return file_exists(SPF_VIEW_PATH. "/{$view}.{$this->file_extension}");
+		return file_exists("{$this->config['view_path']}/{$view}.{$this->config['file_extension']}");
 	}
 
-	public function display( $view ) {
-		echo $this->render($view);
+	public function display( $view, $data = null ) {
+		echo $this->render($view, $data);
 	}
 
-	abstract public function render( $view );
+	abstract public function render( $view, $data = null );
 
 }
 

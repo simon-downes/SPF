@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2011 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2013 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -20,37 +20,34 @@ class Twig extends \spf\view\View {
 	
 	public function __construct( array $config = array() ) {
 		
-		parent::__construct();
+		$config += array(
+			'extensions' => array(),
+		);
+
+		parent::__construct($config);
 		
 		$this->twig = new \Twig_Environment(
-			new \Twig_Loader_Filesystem(SPF_VIEW_PATH),
+			new \Twig_Loader_Filesystem($this->config['view_path']),
 			array(
-  				'cache'       => SPF_CACHE_PATH. '/views',
-  				'auto_reload' => true,
+				'cache'       => $this->config['cache_path'],
+				'auto_reload' => true,
 			)
 		);
 
-		if( isset($config['extensions']) ) {
-			foreach( $config['extensions'] as $extension ) {
-				$this->twig->addExtension(new $extension($config));
-			}
+		foreach( $this->config['extensions'] as $extension ) {
+			$this->twig->addExtension(new $extension($config));
 		}
 		
 	}
 	
-	public function setCharset( $charset ) {
-		return $this->twig->setCharset($charset);
-	}
-	
-	public function getCharset() {
-		return $this->twig->getCharset();
-	}
+	public function render( $view, $data = null ) {
 
-	public function render( $view ) {
+		if( $data === null )
+			$data = $this->data;
 
 		$this->profiler && $this->profiler->start('View Render');
 
-		$content = $this->twig->render("{$view}.{$this->file_extension}", $this->data);
+		$content = $this->twig->render("{$view}.{$this->file_extension}", $data);
 
 		$this->profiler && $this->profiler->stop('View Render');
 
