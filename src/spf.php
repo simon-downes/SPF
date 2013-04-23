@@ -116,7 +116,7 @@ function assert_instance( $var, $class ) {
 }
 
 function assert_interface( $var, $interface ) {
-	if( !is_object($var) || !($var implements $interface) )
+	if( !is_object($var) || !($var instanceof $interface) )
 		throw \InvalidArgumentException(var_info($var). " does not implement {$interface}");
 }
 
