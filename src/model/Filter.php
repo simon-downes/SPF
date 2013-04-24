@@ -54,6 +54,16 @@ class Filter {
 	}
 	
 	/**
+	 * $field must not equal $value.
+	 * @param  string   $field   name of the field
+	 * @param  string   $value
+	 * @return self
+	 */
+	public function notEquals( $field, $value ) {
+		return $this->addCriteria($field, '!=', $value);
+	}
+
+	/**
 	 * $field must be less than $value.
 	 * @param  string   $field   name of the field
 	 * @param  string   $value

@@ -64,7 +64,7 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	 * @param  array    $rules   an array of validation rules
 	 * @return self
 	 */
-	public function add( $name, $type, $rules = array() ) {
+	public function add( $name, $type = self::TYPE_TEXT, $rules = array() ) {
 
 		// base item
 		$item = array(

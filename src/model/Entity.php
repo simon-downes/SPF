@@ -53,21 +53,7 @@ abstract class Entity extends \spf\core\CustomObject {
 	 * @return string
 	 */
 	public static function getMapId( $id ) {
-		
-		static $key;
-		
-		if( !$key ) {
-			$key = implode(
-				'',
-				array_map(
-					'ucfirst', 
-					explode('\\', get_called_class())
-				)
-			);
-		}
-		
-		return "{$key}.{$id}";
-		
+		return sprintf("%s::%s", get_called_class(), $id);
 	}
 
 	public function __construct( $data = array() ) {
@@ -169,7 +155,7 @@ abstract class Entity extends \spf\core\CustomObject {
 			return $dirty;
 		}
 		elseif( array_key_exists($field, $this->_updated) ) {
-			return !array_key_exists($k, $this->_data) || ($this->_updated[$field] != $this->_data[$k]);
+			return !array_key_exists($field, $this->_data) || ($this->_updated[$field] != $this->_data[$field]);
 		}
 		else {
 			return false;

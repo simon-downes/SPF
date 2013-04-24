@@ -42,16 +42,16 @@ class GenericMapper extends DataMapper {
 			foreach( $this->fields as $field ) {
 				if( $db_field = $this->getDbFieldName($field->name) ) {
 					if( substr($db_field, 1, -1) == $field->name )
-						$this->fieldlist .= "{$db_field}, ";
+						$this->fieldlist .= "`{$db_field}`, ";
 					else
-						$this->fieldlist .= "{$db_field} AS `{$field->name}`, ";
+						$this->fieldlist .= "`{$db_field}` AS `{$field->name}`, ";
 				}
 			}
 			$this->fieldlist = substr($this->fieldlist, 0, -2);
 		}
 
 		$sql = strtr(
-			"SELECT {fields} FROM `{table}` WHERE {field} IN ({ids})",
+			"SELECT {fields} FROM `{table}` WHERE `{field}` IN ({ids})",
 			array(
 				'{fields}' => $this->fieldlist,
 				'{table}'  => $this->db_table,
@@ -94,12 +94,18 @@ class GenericMapper extends DataMapper {
 			
 			if( $db_field = $this->getDbFieldName($field->name) ) {
 				// sql assignment clause and corresponding parameter value
-				$sql .= "{$db_field} = :{$field->name},\n";
+				$sql .= "`{$db_field}` = :{$field->name},\n";
 				$params[$field->name] = $this->getDbFieldValue($field->name, $entity);
 			}
 			
 		}
-		
+
+		($before = $this->beforeInsert($entity, $sql, $params)) && (list($sql, $params) = $before);
+
+		// insert was cancelled
+		if( !$before )
+			return true;
+
 		$sql = strtr(
 			"INSERT INTO `{table}`\nSET {values}",
 			array(
@@ -108,15 +114,16 @@ class GenericMapper extends DataMapper {
 			)
 		);
 
-		$success = $this->db->execute($sql, $params);
-		
-		if( $success ) {
+		if( $this->db->execute($sql, $params) ) {
 			$entity->id = $this->db->insertId();
-			$entity->markClean();
 		}
-		
-		return (bool) $success;
-		
+
+		$this->afterInsert($entity);
+
+		$entity->markClean();
+
+		return $entity->hasId();
+
 	}
 	
 	public function update( $entity ) {
@@ -143,33 +150,36 @@ class GenericMapper extends DataMapper {
 			
 			if( $db_field = $this->getDbFieldName($field->name) ) {
 				// sql assignment clause and corresponding parameter value
-				$sql .= "{$db_field} = :{$field->name},\n";
+				$sql .= "`{$db_field}` = :{$field->name},\n";
 				$params[$field->name] = $this->getDbFieldValue($field->name, $entity);
 			}
 			
 		}
-		
-		// nothing was dirty so nothing to update
-		if( !$sql )
-			return true;
-		
-		$sql = strtr(
-			"UPDATE `{table}`\nSET {values}\nWHERE {field} = :id",
-			array(
-				'{table}'  => $this->db_table,
-				'{values}' => substr($sql, 0, -2),
-				'{field}'  => $this->getDbFieldName('id')
-			)
-		);
 
-		$success = $this->db->execute($sql, $params + array('id' => $entity->id));
-		
-		if( $success ) {
-			$entity->markClean();
+		($before = $this->beforeUpdate($entity, $sql, $params)) && (list($sql, $params) = $before);
+
+		// make sure update wasn't cancelled and there's something to actually do
+		if( $before && $sql ) {
+
+			$sql = strtr(
+				"UPDATE `{table}`\nSET {values}\nWHERE `{field}` = :id",
+				array(
+					'{table}'  => $this->db_table,
+					'{values}' => substr($sql, 0, -2),
+					'{field}'  => $this->getDbFieldName('id')
+				)
+			);
+
+			$this->db->execute($sql, $params + array('id' => $entity->id));
+
 		}
-		
-		return (bool) $success;
-		
+
+		$this->afterUpdate($entity);	
+
+		$entity->markClean();
+
+		return true;
+
 	}
 	
 	public function delete( $id ) {
@@ -180,13 +190,61 @@ class GenericMapper extends DataMapper {
 		if( !(int) $id )
 			throw new \InvalidArgumentException('Can\'t delete, no id given');
 		
-		$sql = sprintf("DELETE FROM `%s` WHERE %s = ?", $this->db_table, $this->getDbFieldName('id'));
+		$sql = sprintf("DELETE FROM `%s` WHERE `%s` = ?", $this->db_table, $this->getDbFieldName('id'));
 		$success = $this->db->execute($sql, (int) $id);
 		
 		return (bool) $success;
 		
 	}
-	
+
+	/**
+	 * This function is called after building the fieldlist and parameters of the insert statement.
+	 * It can be used by subclasses to modify the fieldlist and parameters depending on the state of the entity.
+	 * e.g. Handling cases where a single entity field maps to multiple database fields.
+	 * It can also be used to cancel an insert by returning false.
+	 *
+	 * @param  \spf\model\Entity $entity   the entity being inserted.
+	 * @param  string             $sql      the current sql fieldlist.
+	 * @param  array              $params   the current parameter list.
+	 * @return array|boolean
+	 */
+	protected function beforeInsert( $entity, $sql, $params ) {
+		return array($sql, $params);
+	}
+
+	/**
+	 * This function is called after building the fieldlist and parameters of the update statement.
+	 * It can be used by subclasses to modify the fieldlist and parameters depending on the state of the entity.
+	 * e.g. Handling cases where a single entity field maps to multiple database fields.
+	 * It can also be used to cancel an update by returning an empty sql string.
+	 *
+	 * @param  \spf\model\Entity $entity   the entity being updated.
+	 * @param  string             $sql      the current sql fieldlist.
+	 * @param  array              $params   the current parameter list.
+	 * @return array|boolean
+	 */
+	protected function beforeUpdate( $entity, $sql, $params ) {
+		return array($sql, $params);
+	}
+
+	/**
+	 * This function is called after the entity has been given its id but before it's marked clean.
+	 *
+	 * @param  \spf\model\Entity $entity   the entity that was inserted.
+	 * @return void
+	 */
+	protected function afterInsert( $entity ) {
+	}
+
+	/**
+	 * This function is called after the entity has been updated but before it's marked clean.
+	 *
+	 * @param  \spf\model\Entity $entity   the entity that was updated.
+	 * @return void
+	 */
+	protected function afterUpdate( $entity ) {
+	}
+
 }
 
 // EOF

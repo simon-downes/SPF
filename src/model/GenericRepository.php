@@ -207,10 +207,10 @@ class GenericRepository extends Repository {
 				// 'INs' are placed inline and not passed as parameters, they've already been quoted
 				if( $operator == 'IN' ) {
 					$operand = "({$value})";
-					$value = null;
 				}
 				else {
 					$operand = ":{$field}";
+					$params[$field] = $value;
 				}
 				
 				$where .= strtr(
@@ -222,9 +222,6 @@ class GenericRepository extends Repository {
 						'{operand}'  => $operand,
 					)
 				);
-				
-				if( $value )
-					$params[$field] = $value;
 				
 			}
 			$where = 'WHERE '. substr($where, 4, -1);
