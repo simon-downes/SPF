@@ -1,0 +1,17 @@
+{
+    "name":        "simon-downes/spf",
+    "description": "Yet another framework...",
+    "keywords":    ["framework", "spf"],
+    "license":     "MIT",
+    "authors": [
+        {
+            "name":         "Simon Downes",
+            "email":        "simon@simondownes.co.uk",
+            "homepage":     "http://simondownes.co.uk",
+            "role":         "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    }
+}
