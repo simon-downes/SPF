@@ -2,7 +2,7 @@
 /*
  * This file is part of SPF.
  *
- * Copyright (c) 2012 Simon Downes <simon@simondownes.co.uk>
+ * Copyright (c) 2013 Simon Downes <simon@simondownes.co.uk>
  * 
  * Distributed under the MIT License, a copy of which is available in the
  * LICENSE file that was bundled with this package, or online at:
@@ -35,6 +35,8 @@ class Config {
 		foreach( $config as $k => $v ) {
 			$this->set($k, $v);
 		}
+
+		return $this;
 
 	}
 
@@ -78,6 +80,8 @@ class Config {
 			}
 			$context = &$context[$part];
 		}
+
+		return $this;
 
 	}
 
