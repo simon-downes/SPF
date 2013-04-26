@@ -23,7 +23,7 @@ class GenericRepository extends Repository {
 		$db_table = $this->mapper->getDbTable();
 
 		$sql = strtr(
-			"SELECT COUNT({alias}.{field})\nFROM `{table}` AS {alias}\n{joins}\n{where}",
+			"SELECT COUNT({alias}.`{field}`)\nFROM `{table}` AS {alias}\n{joins}\n{where}",
 			array(
 				'{field}'   => $this->mapper->getDbFieldName('id'),
 				'{table}'   => $db_table,
@@ -45,7 +45,7 @@ class GenericRepository extends Repository {
 		$db_table = $this->mapper->getDbTable();
 
 		$sql = strtr(
-			"SELECT {alias}.{field}\nFROM `{table}` AS {alias}\n{joins}\n{where}\n{orderby}\nLIMIT :offset, :limit",
+			"SELECT {alias}.`{field}`\nFROM `{table}` AS {alias}\n{joins}\n{where}\n{orderby}\nLIMIT :offset, :limit",
 			array(
 				'{field}'   => $this->mapper->getDbFieldName('id'),
 				'{table}'   => $db_table,
@@ -214,7 +214,7 @@ class GenericRepository extends Repository {
 				}
 				
 				$where .= strtr(
-					"AND {table}.{field} {operator} {operand}\n",
+					"AND {table}.`{field}` {operator} {operand}\n",
 					array(
 						'{table}'    => $table_alias,
 						'{field}'    => $this->mapper->getDbFieldName($field),
@@ -231,7 +231,7 @@ class GenericRepository extends Repository {
 		$params['limit']  = $filter['limit'];
 		
 		foreach( $filter['orderby'] as $field => $dir ) {
-			$orderby .= "{$table_alias}.". $this->mapper->getDbFieldName($field). " {$dir}, ";
+			$orderby .= "{$table_alias}.`". $this->mapper->getDbFieldName($field). "` {$dir}, ";
 		}
 		$orderby = 'ORDER BY '. substr($orderby, 0, -2);
 		
