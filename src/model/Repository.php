@@ -60,9 +60,9 @@ abstract class Repository {
 		$this->map    = $map;
 		$this->mapper = $mapper;
 
-		assert_instance($this->db, '\\spf\\data\\Database');
-		assert_instance($this->map, '\\spf\\model\\IdentityMap');
-		assert_instance($this->mapper, '\\spf\\model\\DataMapper');
+		\spf\assert_instance($this->db, '\\spf\\data\\Database');
+		\spf\assert_instance($this->map, '\\spf\\model\\IdentityMap');
+		\spf\assert_instance($this->mapper, '\\spf\\model\\DataMapper');
 
 	}
 	
@@ -73,7 +73,7 @@ abstract class Repository {
 	 * @return  self
 	 */
 	public function setCache( $cache ) {
-		($cache !== null) || assert_instance($cache, '\\spf\\storage\\Cache');
+		($cache !== null) || \spf\assert_instance($cache, '\\spf\\storage\\Cache');
 		$this->cache = $cache;
 		return $this;
 	}
@@ -85,7 +85,7 @@ abstract class Repository {
 	 * @return  self
 	 */
 	public function setLogger( $log ) {
-		($log !== null) || assert_instance($log, '\\spf\\log\\Logger');
+		($log !== null) || \spf\assert_instance($log, '\\spf\\log\\Logger');
 		$this->log = $log;
 		return $this;
 	}
@@ -97,7 +97,7 @@ abstract class Repository {
 	 * @return  self
 	 */
 	public function setProfiler( $profiler ) {
-		($profiler !== null) || assert_instance($profiler, '\\spf\\util\\Profiler');
+		($profiler !== null) || \spf\assert_instance($profiler, '\\spf\\util\\Profiler');
 		$this->profiler = $profiler;
 		return $this;
 	}

@@ -182,7 +182,7 @@ class GenericRepository extends Repository {
 		if( $filter === null )
 			$filter = new Filter();
 
-		assert_instance($filter, '\\spf\\model\\Filter');
+		\spf\assert_instance($filter, '\\spf\\model\\Filter');
 
 		$filter = $filter->toArray();
 

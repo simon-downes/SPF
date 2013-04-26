@@ -51,7 +51,7 @@ abstract class DataMapper {
 		if( !$this->entity_class )
 			throw new Exception('No entity class has been specified for '. get_class($this));
 
-		assert_instance($this->db, '\\spf\\data\\Database');
+		\spf\assert_instance($this->db, '\\spf\\data\\Database');
 
 		if( !$this->db_table )
 			throw new Exception('No database table has been specified for '. get_class($this));
@@ -67,7 +67,7 @@ abstract class DataMapper {
 	 * @return  self
 	 */
 	public function setCache( $cache ) {
-		($cache !== null) || assert_instance($cache, '\\spf\\storage\\Cache');
+		($cache !== null) || \spf\assert_instance($cache, '\\spf\\storage\\Cache');
 		$this->cache = $cache;
 		return $this;
 	}
@@ -79,7 +79,7 @@ abstract class DataMapper {
 	 * @return  self
 	 */
 	public function setLogger( $log ) {
-		($log !== null) || assert_instance($log, '\\spf\\log\\Logger');
+		($log !== null) || \spf\assert_instance($log, '\\spf\\log\\Logger');
 		$this->log = $log;
 		return $this;
 	}
@@ -91,7 +91,7 @@ abstract class DataMapper {
 	 * @return  self
 	 */
 	public function setProfiler( $profiler ) {
-		($profiler !== null) || assert_instance($profiler, '\\spf\\util\\Profiler');
+		($profiler !== null) || \spf\assert_instance($profiler, '\\spf\\util\\Profiler');
 		$this->profiler = $profiler;
 		return $this;
 	}

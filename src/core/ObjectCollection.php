@@ -56,7 +56,7 @@ class ObjectCollection extends Collection {
 	 * @return self
 	 */
 	public function set( $key, $item ) {
-        assert_instance($item, $this->class);
+        \spf\assert_instance($item, $this->class);
         $this->items[$key] = $item;
         return $this;
 	}

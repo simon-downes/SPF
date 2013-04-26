@@ -75,7 +75,7 @@ class GenericMapper extends DataMapper {
 	
 	public function insert( $entity ) {
 		
-		assert_instance($entity,$this->entity_class);
+		\spf\assert_instance($entity,$this->entity_class);
 
 		if( $entity->getErrors() )
 			throw new \spf\model\Exception("Can't insert, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));
@@ -128,7 +128,7 @@ class GenericMapper extends DataMapper {
 	
 	public function update( $entity ) {
 	
-		assert_instance($entity,$this->entity_class);
+		\spf\assert_instance($entity,$this->entity_class);
 
 		if( $entity->getErrors() )
 			throw new \spf\model\Exception("Can't update, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));

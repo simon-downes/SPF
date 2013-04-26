@@ -51,7 +51,7 @@ abstract class View {
 	 * @return  self
 	 */
 	public function setLogger( $log ) {
-		($log !== null) || assert_instance($log, '\\spf\\log\\Logger');
+		($log !== null) || \spf\assert_instance($log, '\\spf\\log\\Logger');
 		$this->log = $log;
 		return $this;
 	}
@@ -63,7 +63,7 @@ abstract class View {
 	 * @return  self
 	 */
 	public function setProfiler( $profiler ) {
-		($profiler !== null) || assert_instance($profiler, '\\spf\\util\\Profiler');
+		($profiler !== null) || \spf\assert_instance($profiler, '\\spf\\util\\Profiler');
 		$this->profiler = $profiler;
 		return $this;
 	}

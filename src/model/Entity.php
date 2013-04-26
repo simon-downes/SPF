@@ -40,7 +40,7 @@ abstract class Entity extends \spf\core\CustomObject {
 			$fieldset = new Fieldset();
 		
 		else
-			assert_instance($fieldset, '\\yolk\\model\\Fieldset');
+			\spf\assert_instance($fieldset, '\\yolk\\model\\Fieldset');
 
 		return $fieldset;
 
