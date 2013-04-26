@@ -51,7 +51,7 @@ class CustomObject extends Object {
 	public function __set( $key, $value ) {
 		if( isset($this->_setters[$key]) )
 			$this->{$this->_setters[$key]}($value);
-		else {
+		else
 			parent::__set($key, $value);
 	}
 
