@@ -112,12 +112,12 @@ function var_info( $var ) {
 
 function assert_instance( $var, $class ) {
 	if( !is_object($var) || !($var instanceof $class) )
-		throw \InvalidArgumentException("Instance of {$class} expected, ". var_info($var). ' given');
+		throw new \InvalidArgumentException("Instance of {$class} expected, ". var_info($var). ' given');
 }
 
 function assert_interface( $var, $interface ) {
 	if( !is_object($var) || !($var instanceof $interface) )
-		throw \InvalidArgumentException(var_info($var). " does not implement {$interface}");
+		throw new \InvalidArgumentException(var_info($var). " does not implement {$interface}");
 }
 
 function randomHex( $length = 40 ) {
