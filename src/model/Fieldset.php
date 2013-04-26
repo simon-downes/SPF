@@ -41,15 +41,17 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	const TYPE_CUSTOM   = 'custom';
 
 	// errors
-	const ERROR_NONE     = false;
-	const ERROR_TYPE     = 'type';
-	const ERROR_REQUIRED = 'required';
-	const ERROR_NULL     = 'null';
-	const ERROR_MIN      = 'min';
-	const ERROR_MAX      = 'max';
-	const ERROR_REGEX    = 'regex';
-	const ERROR_VALUE    = 'value';
-	const ERROR_EXISTS   = 'exists';
+	const ERROR_NONE      = false;
+	const ERROR_TYPE      = 'type';
+	const ERROR_REQUIRED  = 'required';
+	const ERROR_NULL      = 'null';
+	const ERROR_MIN       = 'min';
+	const ERROR_MAX       = 'max';
+	const ERROR_TOO_SHORT = 'too-short';
+	const ERROR_TOO_LONG  = 'too-long';
+	const ERROR_REGEX     = 'regex';
+	const ERROR_VALUE     = 'value';
+	const ERROR_EXISTS    = 'exists';
 
 	public function __construct() {
 		// pass an empty array as Fieldsets are a special kind of Immutable -
@@ -203,6 +205,12 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 				elseif( isset($field->max) && ($clean > $field->max) )
 					$error = self::ERROR_MAX;
+
+				elseif( isset($field->min_length) && (mb_strlen($clean) > 0) && (mb_strlen($clean) < $field->min_length) )
+					$error = self::ERROR_TOO_SHORT;
+
+				elseif( isset($field->max_length) && (mb_strlen($value) > $field->max_length) )
+					$error = self::ERROR_TOO_LONG;
 
 				elseif( isset($field->regex) && !preg_match($field->regex, $clean) )
 					$error = self::ERROR_REGEX;
