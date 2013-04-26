@@ -23,6 +23,8 @@ abstract class Entity extends \spf\core\CustomObject {
 
 	protected $_errors;		// array of errors
 
+	protected $_immutable;
+
 	/**
 	 * Returns the fieldset containing the fields and rules for the entity.
 	 * Subclasses should override this method and initialise the Fieldset with
@@ -57,6 +59,9 @@ abstract class Entity extends \spf\core\CustomObject {
 	}
 
 	public function __construct( $data = array() ) {
+
+		$this->_immutable || $this->_immutable = array();
+		$this->_immutable = array_filter($this->_immutable += array('id' => true));
 
 		parent::__construct();
 
@@ -262,9 +267,8 @@ abstract class Entity extends \spf\core\CustomObject {
 		if( $key === null )
 			throw new \InvalidArgumentException('NULL keys are not supported for '. __CLASS__ .' properties');
 
-		// id is immutable once set to a none empty value - i.e. can only be set once
-		if( ($key == 'id') && $this->hasId() )
-			throw new \LogicException('Property \'id\' is immutable');
+		if( isset($this->_immutable[$key]) && array_key_exists($key, $this->_data) && $this->_data[$key] )
+			throw new \LogicException('\\'. get_class($this). "->{$key} is immutable");
 
 		unset($this->_errors[$key]);
 
