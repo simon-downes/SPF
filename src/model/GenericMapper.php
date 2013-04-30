@@ -80,7 +80,7 @@ class GenericMapper extends DataMapper {
 		if( $entity->getErrors() )
 			throw new \spf\model\Exception("Can't insert, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));
 		
-		if( $entity->id )
+		if( $entity->original('id') )
 			throw new Exception('Can\'t insert, entity already has an id');
 		
 		$sql    = '';
@@ -88,8 +88,8 @@ class GenericMapper extends DataMapper {
 
 		foreach( $this->fields as $field ) {
 			
-			// don't insert the id field
-			if( $field->name == 'id' )
+			// don't insert the id field if it's not specified
+			if( $field->name == 'id' && !$entity->id )
 				continue;
 			
 			if( $db_field = $this->getDbFieldName($field->name) ) {
@@ -115,7 +115,8 @@ class GenericMapper extends DataMapper {
 		);
 
 		if( $this->db->execute($sql, $params) ) {
-			$entity->id = $this->db->insertId();
+			if( !$entity->id )
+				$entity->id = $this->db->insertId();
 		}
 
 		$this->afterInsert($entity);

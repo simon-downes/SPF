@@ -176,7 +176,7 @@ abstract class Entity extends \spf\core\CustomObject {
 	public function markClean( $field = null ) {
 		if( $field === null ) {
 			if( $this->_errors )
-				throw new Exception('Cannot mark '. get_class(). " as clean - has errors");
+				throw new Exception('Cannot mark '. get_class($this). " as clean - has errors: ". var_export($this->_errors, true));
 			foreach( $this->_updated as $k => $v ) {
 				$this->_data[$k] = $v;
 			}
@@ -185,7 +185,7 @@ abstract class Entity extends \spf\core\CustomObject {
 		}
 		elseif( array_key_exists($field, $this->_updated) ) {
 			if( $this->_errors[$field] )
-				throw new Exception('Cannot mark '. get_class(). "->{$field} as clean - has error '{$this->_errors[$field]}'");
+				throw new Exception('Cannot mark '. get_class($this). "->{$field} as clean - has error '{$this->_errors[$field]}'");
 			$this->_data[$field] = $this->_updated[$field];
 			unset($this->_updated[$field]);
 			unset($this->_errors[$field]);
