@@ -111,7 +111,14 @@ abstract class Repository {
 	public function create( $data = array() ) {
 		return $this->mapper->create($data);
 	}
-	
+
+	public function findAll( $limit = 1000 ) {
+		$filter = new \spf\model\Filter();
+		return $this->find(
+			$filter->limit($limit)
+		);
+	}
+
 	/**
 	 * Find the first entity matching the specified filter.
 	 *
