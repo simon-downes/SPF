@@ -103,6 +103,15 @@ abstract class Repository {
 	}
 
 	/**
+	 * Return a new filter object for this repository.
+	 *
+	 * @return  \spf\model\Filter
+	 */
+	public function filter() {
+		return new Filter();
+	}
+
+	/**
 	 * Create an entity the repository is responsible for.
 	 *
 	 * @param   array   $data   data to initialise the entity with
@@ -112,10 +121,15 @@ abstract class Repository {
 		return $this->mapper->create($data);
 	}
 
+	/**
+	 * Return all entities up to the specified limit.
+	 *
+	 * @param   integer  $limit
+	 * @return  array
+	 */
 	public function findAll( $limit = 1000 ) {
-		$filter = new \spf\model\Filter();
 		return $this->find(
-			$filter->limit($limit)
+			$this->filter()->limit($limit)
 		);
 	}
 
@@ -146,9 +160,8 @@ abstract class Repository {
 		$entity = $this->map->get($key);
 
 		if( !$entity ) {
-			$filter = new \spf\model\Filter();
 			$entity = $this->findFirst(
-				$filter->equals('id', $id)
+				$this->filter()->equals('id', $id)
 			);
 		}
 		

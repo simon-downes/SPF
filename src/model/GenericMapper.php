@@ -41,7 +41,7 @@ class GenericMapper extends DataMapper {
 			$this->fieldlist = '';
 			foreach( $this->fields as $field ) {
 				if( $db_field = $this->getDbFieldName($field->name) ) {
-					if( substr($db_field, 1, -1) == $field->name )
+					if( $db_field == $field->name )
 						$this->fieldlist .= "`{$db_field}`, ";
 					else
 						$this->fieldlist .= "`{$db_field}` AS `{$field->name}`, ";

@@ -105,6 +105,15 @@ abstract class DataMapper {
 	}
 
 	/**
+	 * Return an alias for the specified table to be used in queries.
+	 * @param  string $table
+	 * @return string
+	 */
+	public function getTableAlias( $table ) {
+		return substr($table, 0, 1);
+	}
+
+	/**
 	 * Translate an entity field name into a database column name.
 	 * @param  string $field   entity field name to translate.
 	 * @return string

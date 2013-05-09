@@ -144,10 +144,15 @@ class Filter {
 	 * @param  boolean  $dir     one of the Filter::SORT_* constants
 	 * @return self
 	 */
-	public function orderBy( $field, $dir = self::SORT_ASC ) {
-		$field = trim($field);
-		$this->orderby[$field] = $dir ? 'ASC' : 'DESC';
-		return $this;
+	public function orderBy( $field = null, $dir = self::SORT_ASC ) {
+		if( !$field ) {
+			return $this->orderby;
+		}
+		else {
+			$field = trim($field);
+			$this->orderby[$field] = $dir ? 'ASC' : 'DESC';
+			return $this;
+		}
 	}
 	
 	/**
@@ -155,9 +160,14 @@ class Filter {
 	 * @param  integer  $offset
 	 * @return self
 	 */
-	public function offset( $offset ) {
-		$this->offset = (int) $offset;
-		return $this;
+	public function offset( $offset = null ) {
+		if( $offset === null ) {
+			return $this->offset;
+		}
+		else {
+			$this->offset = (int) $offset;
+			return $this;
+		}
 	}
 	
 	/**
@@ -165,9 +175,14 @@ class Filter {
 	 * @param  integer  $limit
 	 * @return self
 	 */
-	public function limit( $limit )	 {
-		$this->limit = (int) $limit;
-		return $this;
+	public function limit( $limit = null )	 {
+		if( $limit === null ) {
+			return $this->limit;
+		}
+		else {
+			$this->limit = (int) $limit;
+			return $this;
+		}
 	}
 	
 	/**
@@ -176,13 +191,172 @@ class Filter {
 	 */
 	public function toArray() {
 		return array(
-			'criteria'  => $this->criteria,
-			'orderby'   => $this->orderby,
-			'offset'    => $this->offset,
-			'limit'     => $this->limit,
+			'criteria' => $this->criteria,
+			'orderby'  => $this->orderby,
+			'offset'   => $this->offset,
+			'limit'    => $this->limit,
 		);
 	}
 	
+	public function buildSelectQuery( $fields, $mapper ) {
+
+		if( !is_array($fields) )
+			$fields = array($fields);
+
+		$table = $mapper->getTableAlias($mapper->getDbTable());
+
+		$fieldlist = '';
+		foreach( $fields as $field ) {
+			if( $db_field = $mapper->getDbFieldName($field) ) {
+				if( $db_field == $field )
+					$fieldlist .= "{$table}.`{$db_field}`, ";
+				else
+					$fieldlist .= "{$table}.`{$db_field}` AS `{$field}`, ";
+			}
+		}
+
+		return $this->buildQuery($mapper, 'SELECT '. substr($fieldlist, 0, -2));
+
+	}
+
+	public function buildCountQuery( $field, $mapper ) {
+
+		$select = strtr(
+			"SELECT COUNT({alias}.`{field}`)",
+			array(
+				'{alias}' => $mapper->getTableAlias($mapper->getDbTable()),
+				'{field}' => $mapper->getDbFieldName($field),
+			)
+		);
+
+		return $this->buildQuery($mapper, $select);
+
+	}
+
+	public function buildQuery( $mapper, $prefix = '' ) {
+
+		\spf\assert_instance($mapper, '\\spf\\model\\DataMapper');
+
+		$query = $this->decode($mapper);
+
+		if( $query['where'] )
+			$query['where'] = 'WHERE '. substr($query['where'], 4, -1);
+
+		if( $query['orderby'] )
+			$query['orderby'] = 'ORDER BY '. substr($query['orderby'], 0, -2);
+
+		$db_table = $mapper->getDbTable();
+
+		$sql = strtr(
+			"{prefix}\nFROM `{table}` AS {alias}\n{joins}\n{where}\n{orderby}\n{limit}",
+			array(
+				'{prefix}'  => $prefix,
+				'{field}'   => $mapper->getDbFieldName('id'),
+				'{table}'   => $db_table,
+				'{alias}'   => $mapper->getTableAlias($db_table),
+				'{joins}'   => $query['joins'],
+				'{where}'   => $query['where'],
+				'{orderby}' => $query['orderby'],
+				'{limit}'   => $query['limit'],
+			)
+		);
+		$sql = trim(preg_replace("/\n{2,}/", "\n", $sql));
+
+		return array($sql, $query['params']);
+
+	}
+
+	protected function decode( $mapper ) {
+
+		$query = array(
+			'where'   => '',
+			'joins'   => '',
+			'orderby' => '',
+			'limit'   => '',
+			'params'  => array(),
+		);
+
+		return $this->decodeOffset(
+			$this->decodeOrderBy(
+				$this->decodeCriteria(
+					$query,
+					$mapper
+				),
+				$mapper
+			)
+		);
+
+	}
+
+	protected function decodeCriteria( $query, $mapper ) {
+
+		if( !$this->criteria )
+			return $query;
+
+		$table_alias = $mapper->getTableAlias($mapper->getDbTable());
+
+		foreach( $this->criteria as $field => $opval ) {
+
+			list($operator, $value) = $opval;
+
+			if( $operator == 'IN' ) {
+				$operand = "({$value})";
+				$value = null;
+			}
+			else {
+				$operand = ":{$field}";
+				$query['params'][$field] = $value;
+			}
+
+			$query['where'] .= strtr(
+				"AND {table}.`{field}` {operator} {operand}\n",
+				array(
+					'{table}'    => $table_alias,
+					'{field}'    => $mapper->getDbFieldName($field),
+					'{operator}' => $operator,
+					'{operand}'  => $operand,
+				)
+			);
+
+		}
+		
+		return $query;
+
+	}
+
+	protected function decodeOrderBy( $query, $mapper ) {
+
+		if( !$this->orderby )
+			return $query;
+
+		$table_alias = $mapper->getTableAlias($mapper->getDbTable());
+
+		foreach( $this->orderby as $field => $dir ) {
+			$query['orderby'] .= "{$table_alias}.`". $mapper->getDbFieldName($field). "` {$dir}, ";
+		}
+
+		return $query;
+
+	}
+
+	protected function decodeOffset( $query ) {
+
+		if( $this->offset || $this->limit ) {
+			if( $this->limit ) {
+				$query['limit'] = "LIMIT :offset, :limit";
+				$query['params']['offset'] = $this->offset;
+				$query['params']['limit']  = $this->limit;
+			}
+			else {
+				$query['limit'] = "LIMIT :offset";
+				$query['params']['offset'] = $this->offset;
+			}
+		}
+
+		return $query;
+
+	}
+
 	/**
 	 * Add a criteria item to the filter.
 	 * @param  string   $field

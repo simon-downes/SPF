@@ -14,53 +14,31 @@ namespace spf\model;
 class GenericRepository extends Repository {
 	
 	public function count( $filter = null ) {
-		
-		$query = $this->decodeFilter($filter);
 
-		unset($query['params']['offset']);
-		unset($query['params']['limit']);
+		if( $filter === null )
+			$filter = $this->filter();
+		else
+			\spf\assert_instance($filter, '\\spf\\model\\Filter');
 
-		$db_table = $this->mapper->getDbTable();
+		list($sql, $params) = $filter->buildCountQuery('id', $this->mapper);
 
-		$sql = strtr(
-			"SELECT COUNT({alias}.`{field}`)\nFROM `{table}` AS {alias}\n{joins}\n{where}",
-			array(
-				'{field}'   => $this->mapper->getDbFieldName('id'),
-				'{table}'   => $db_table,
-				'{alias}'   => substr($db_table, 0, 1),
-				'{joins}'   => $query['joins'],
-				'{where}'   => $query['where'],
-			)
-		);
-		$sql = preg_replace("/\n{2,}/", "\n", $sql);
-		
-		return (int) $this->db->getOne($sql, $query['params']);
-		
+		return (int) $this->db->getOne($sql, $params);
+
 	}
 	
 	public function find( $filter = null ) {
-	
-		$query = $this->decodeFilter($filter);
 
-		$db_table = $this->mapper->getDbTable();
+		if( $filter === null )
+			$filter = $this->filter();
+		else
+			\spf\assert_instance($filter, '\\spf\\model\\Filter');
 
-		$sql = strtr(
-			"SELECT {alias}.`{field}`\nFROM `{table}` AS {alias}\n{joins}\n{where}\n{orderby}\nLIMIT :offset, :limit",
-			array(
-				'{field}'   => $this->mapper->getDbFieldName('id'),
-				'{table}'   => $db_table,
-				'{alias}'   => substr($db_table, 0, 1),
-				'{joins}'   => $query['joins'],
-				'{where}'   => $query['where'],
-				'{orderby}' => $query['orderby'],
-			)
+		list($sql, $params) = $filter->buildSelectQuery('id', $this->mapper);
+
+		return $this->fetch(
+			$this->db->getCol($sql, $params)
 		);
-		$sql = preg_replace("/\n{2,}/", "\n", $sql);
 
-		$items = $this->db->getCol($sql, $query['params']);
-		
-		return $this->fetch($items);
-		
 	}
 	
 	public function fetch( $ids ) {
@@ -82,7 +60,7 @@ class GenericRepository extends Repository {
 	 * e.g. An ArticleRepository can use it to fetch comments by
 	 * specifying a CommentMapper instance.
 	 * @param  array|integer           $ids
-	 * @param  \spf\model\DataMapper  $mapper.
+	 * @param  \spf\model\DataMapper   $mapper.
 	 * @return array
 	 */
 	protected function genericFetch( $ids, $mapper ) {
@@ -168,82 +146,7 @@ class GenericRepository extends Repository {
 		return $success;
 		
 	}
-	
-	/**
-	 * Convert a \spf\model\Filter instance into SQL clauses.
-	 * Should return an array containing the join, where and order by parts,
-	 * and the parameters, of the SQL query used by the find() method.
-	 * 
-	 * @param  \spf\model\Filter   $filter
-	 * @return array
-	 */
-	protected function decodeFilter( $filter ) {
 
-		if( $filter === null )
-			$filter = new Filter();
-
-		\spf\assert_instance($filter, '\\spf\\model\\Filter');
-
-		$filter = $filter->toArray();
-
-		if( !$filter['orderby'] )
-			$filter['orderby'] = array('id' => 'ASC');
-		
-		if( !$filter['limit'] )
-			$filter['limit'] = 25;
-		
-		$where   = '';
-		$joins   = '';
-		$orderby = '';
-		$params  = array();
-		
-		$table_alias = substr($this->mapper->getDbTable(), 0, 1);
-		
-		if( $filter['criteria'] ) {
-			foreach( $filter['criteria'] as $field => $opval ) {
-				
-				list($operator, $value) = $opval;
-				
-				// 'INs' are placed inline and not passed as parameters, they've already been quoted
-				if( $operator == 'IN' ) {
-					$operand = "({$value})";
-				}
-				else {
-					$operand = ":{$field}";
-					$params[$field] = $value;
-				}
-				
-				$where .= strtr(
-					"AND {table}.`{field}` {operator} {operand}\n",
-					array(
-						'{table}'    => $table_alias,
-						'{field}'    => $this->mapper->getDbFieldName($field),
-						'{operator}' => $operator,
-						'{operand}'  => $operand,
-					)
-				);
-				
-			}
-			$where = 'WHERE '. substr($where, 4, -1);
-		}
-		
-		$params['offset'] = $filter['offset'];
-		$params['limit']  = $filter['limit'];
-		
-		foreach( $filter['orderby'] as $field => $dir ) {
-			$orderby .= "{$table_alias}.`". $this->mapper->getDbFieldName($field). "` {$dir}, ";
-		}
-		$orderby = 'ORDER BY '. substr($orderby, 0, -2);
-		
-		return array(
-			'joins'   => $joins,
-			'where'   => $where,
-			'orderby' => $orderby,
-			'params'  => $params,
-		);
-		
-	}
-	
 }
 
 // EOF
