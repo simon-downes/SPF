@@ -299,7 +299,12 @@ abstract class Entity extends \spf\core\CustomObject {
 	 * @return boolean
 	 */
 	public function __isset( $key ) {
-		return isset($this->_data[$key]) || isset($this->_updated[$key]);
+		$v = null;
+		if( isset($this->_getters[$key]) ) {
+			$m = $this->_getters[$key];
+			$v = $this->$m();
+		}
+		return isset($v) || isset($this->_data[$key]) || isset($this->_updated[$key]);
 	}
 
 	/**
