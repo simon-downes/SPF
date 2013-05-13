@@ -6,8 +6,8 @@ set_error_handler(
 	}
 );
 if( $error instanceof \Exception ) {
-	$error = array(
-		'name'    => get_class($error),
+	$err = array(
+		'name'    => '\\'. get_class($error),
 		'code'    => $error->getCode(),
 		'message' => $error->getMessage(),
 		'file'    => $error->getFile(),
@@ -24,15 +24,16 @@ else {
 		E_COMPILE_ERROR   => 'Compile Error',
 		E_COMPILE_WARNING => 'Compile Warning',
 	);
-	$error['name'] = $names[$error['type']];
-	$error['code'] = 0;
-	$error['trace'] = array();	// no trace for fatal errors
+   $err = $error;
+	$err['name'] = $names[$error['type']];
+	$err['code'] = 0;
+	$err['trace'] = array();	// no trace for fatal errors
 }
 ?><html>
 
 <head>
    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-   <title><?=$error['name']?></title>
+   <title><?=$err['name']?></title>
    <link rel="icon" href="/favicon.ico" type="image/vnd.microsoft.icon"/>
    <style type="text/css">
       
@@ -110,8 +111,8 @@ else {
 <body>
 
 <div id="header">
-   <h1><?=$error['name']?></h1>
-   <p><?=$error['code'] ? "{$error['code']} - {$error['message']}" : $error['message']?></p>
+   <h1><?=$err['name']?></h1>
+   <p><?=$err['code'] ? "{$err['code']} - {$err['message']}" : $err['message']?></p>
 </div>
 
 <div id="file">
@@ -121,19 +122,19 @@ else {
    <div class="panel">
       <p>
          <strong>File:</strong>
-         <code><?=$error['file']?></code>&nbsp;&nbsp;
+         <code><?=$err['file']?></code>&nbsp;&nbsp;
          <strong>Line: </strong>
-         <code><?=$error['line']?></code>
+         <code><?=$err['line']?></code>
       </p>
    </div>
    
 </div>
 
-<?php if( $error['trace'] ) { ?>
+<?php if( $err['trace'] ) { ?>
 <div id="trace">
    <h2>Trace:</h2>
    <ol>
-      <?php foreach( $error['trace'] as $i => $item ) { ?>
+      <?php foreach( $err['trace'] as $i => $item ) { ?>
       <li class="panel">
          <?php
          	if( isset($item['file']) ) {
