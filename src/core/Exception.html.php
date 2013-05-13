@@ -24,10 +24,14 @@ else {
 		E_COMPILE_ERROR   => 'Compile Error',
 		E_COMPILE_WARNING => 'Compile Warning',
 	);
-   $err = $error;
-	$err['name'] = $names[$error['type']];
-	$err['code'] = 0;
-	$err['trace'] = array();	// no trace for fatal errors
+   $err = array(
+      'name'    => $names[$error['type']],
+      'code'    => 0,
+      'message' => $error['message'],
+      'file'    => $error['file'],
+      'line'    => $error['line'],
+      'trace'   => array(),   // no trace for fatal errors
+   );
 }
 ?><html>
 

@@ -184,7 +184,7 @@ abstract class Entity extends \spf\core\CustomObject {
 			$this->_errors  = array();
 		}
 		elseif( array_key_exists($field, $this->_updated) ) {
-			if( $this->_errors[$field] )
+			if( isset($this->_errors[$field]) )
 				throw new Exception('Cannot mark '. get_class($this). "->{$field} as clean - has error '{$this->_errors[$field]}'");
 			$this->_data[$field] = $this->_updated[$field];
 			unset($this->_updated[$field]);
@@ -232,6 +232,10 @@ abstract class Entity extends \spf\core\CustomObject {
 		else
 			$this->_errors[$key] = $msg;
 		return $this;
+	}
+
+	public function toArray() {
+		return $this->_updated + $this->_data;
 	}
 
 	/**
