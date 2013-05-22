@@ -98,8 +98,8 @@ function var_info( $var ) {
 	elseif( is_array($var) ) {
 		$info = 'array('. count($var). ')';
 	}
-	elseif( is_object() ) {
-		$info = get_class($var);
+	elseif( is_object($var) ) {
+		$info = '\\'. get_class($var);
 	}
 	elseif( is_resource($var) ) {
 		$info = 'resource('. get_resource_type($var). ')';
@@ -108,6 +108,7 @@ function var_info( $var ) {
 	else {
 		$info = gettype($var);
 	}
+	return $info;
 }
 
 function assert_instance( $var, $class ) {
