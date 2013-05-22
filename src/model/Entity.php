@@ -90,8 +90,10 @@ abstract class Entity extends \spf\core\CustomObject {
 
 		$this->clear();
 
-		if( !(is_array($data) || $data instanceof \Traversable) )
-			throw new Exception("Not traversable: {$data}");
+		if( $data instanceof \spf\core\Object )
+			$data = $data->toArray();
+		elseif( !(is_array($data) || $data instanceof \Traversable) ) { \spf\dd($data); }
+			//throw new Exception("Not traversable: ". \spf\var_info($data));
 
 		// loop defined fields and assign value from data or default value
 		foreach( static::getFields() as $key => $field ) {
