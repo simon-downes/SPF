@@ -35,10 +35,10 @@ class File extends \spf\storage\Cache {
 		if( file_exists($key) ) {
 
 			$data = file_get_contents($key) ;
-			$expiry = (int) substr($data, 0, 10);
+			$expiry = strtotime(substr($data, 0, 19));
 
 			if( time() < $expiry )
-				$value = unserialize(substr($data, 10));
+				$value = unserialize(substr($data, 19));
 			else
 				unlink($key);
 
@@ -54,16 +54,19 @@ class File extends \spf\storage\Cache {
 		$value = serialize($value);
 
 		if( !$expiry ) {
-			$expiry = time() + 31536000;
-		}
-		elseif( is_string($expiry) ) {
-			$expiry = strtotime($expiry);
+			$ts = time() + 86400;
 		}
 		else {
-			$expiry = str_pad(time() + (int) $expiry, 10, '0', STR_PAD_LEFT);
+			$ts = filter_var($expiry, FILTER_VALIDATE_INT);
+			if( $ts === false )
+				$ts = strtotime($expiry);
 		}
 
-		return file_put_contents($key, $expiry. $value, LOCK_EX);
+		if( !$ts )
+			throw new Exception("Invalid Cache Expiry: {$expiry}");
+
+
+		return file_put_contents($key, date('Y-m-d H:i:s', $ts). $value, LOCK_EX);
 
 	}
 
