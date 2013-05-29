@@ -16,9 +16,6 @@ namespace spf\model;
  */
 class Filter {
 	
-	const SORT_ASC  = true;
-	const SORT_DESC = false;
-	
 	protected $criteria;
 	
 	protected $orderby;
@@ -144,13 +141,20 @@ class Filter {
 	 * @param  boolean  $dir     one of the Filter::SORT_* constants
 	 * @return self
 	 */
-	public function orderBy( $field = null, $dir = self::SORT_ASC ) {
+	public function orderBy( $field = null ) {
 		if( !$field ) {
 			return $this->orderby;
 		}
 		else {
 			$field = trim($field);
-			$this->orderby[$field] = $dir ? 'ASC' : 'DESC';
+			if( preg_match('/^(\+|\-)/', $field, $m) ) {
+				$dir = ($m[1] == '-') ? 'DESC' : 'ASC';
+				$field = substr($field, 1);
+			}
+			else {
+				$dir = $dir ? 'ASC' : 'DESC';
+			}
+			$this->orderby[$field] = $dir;
 			return $this;
 		}
 	}
