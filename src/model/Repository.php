@@ -160,9 +160,13 @@ abstract class Repository {
 		$entity = $this->map->get($key);
 
 		if( !$entity ) {
-			$entity = $this->findFirst(
-				$this->filter()->equals('id', $id)
-			);
+			if( $items = $this->mapper->fetch($id) ) {
+				$entity = reset($items);
+				$this->map->set($key, $entity);
+			}
+			else {
+				$entity	= false;
+			}
 		}
 		
 		return $entity;
