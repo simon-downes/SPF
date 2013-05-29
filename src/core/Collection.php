@@ -138,6 +138,41 @@ class Collection implements \IteratorAggregate, \Countable {
 	}
 
 	/**
+	 * Remove items whose key matches the specified regular expression.
+	 *
+	 * @param  string   $regex
+	 * @return self
+	 */
+	public function removeByRegex( $regex ) {
+		$keys = array_filter(
+			array_keys($this->store),
+			function( $k ) use ($regex) {
+				return preg_match($regex, $k);
+			}
+		);
+		foreach( $keys as $k ) {
+			unset($this->store[$k]);
+		}
+		return $this;
+	}
+
+	/**
+	 * Remove items that are instances of the specified class.
+	 *
+	 * @param  string   $class
+	 * @return self
+	 */
+	public function removeByClass( $class ) {
+		$this->store = array_filter(
+			$this->store,
+			function( $v ) use( $class ) {
+				return !($v instanceof $class);
+			}
+		);
+		return $this;
+	}
+
+	/**
 	 * Returns an iterator for parameters.
 	 *
 	 * @return \ArrayIterator   An \ArrayIterator instance
