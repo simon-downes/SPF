@@ -134,21 +134,22 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 		if( !isset($this->$field) )
 			throw new Exception("Field Not Defined: '{$field}'");
 		
-		$field = $this->$field;
+		// straight array access is quicker than dynamic property access
+		$field = $this->$field->toArray();
 		
 		$clean = $value;
 		$error = self::ERROR_NONE;
 
-		if( !$value && $field->required ) {
+		if( !$value && $field['required'] ) {
 			$error = self::ERROR_REQUIRED;
 		}
-		elseif( ($value === null) && !$field->nullable ) {
+		elseif( ($value === null) && !$field['nullable'] ) {
 			$error = self::ERROR_NULL;
 		}
 		else {
 
 			// validate type
-			switch( $field->type ) {
+			switch( $field['type'] ) {
 				case self::TYPE_INTEGER:
 					list($clean, $error) = $this->validateInteger($value);
 					break;
@@ -162,19 +163,19 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 					break;
 
 				case self::TYPE_DATETIME:
-					list($clean, $error) = $this->validateDateTime($value, $field->required);
+					list($clean, $error) = $this->validateDateTime($value, $field['required']);
 					break;
 
 				case self::TYPE_DATE:
-					list($clean, $error) = $this->validateDate($value, $field->required);
+					list($clean, $error) = $this->validateDate($value, $field['required']);
 					break;
 
 				case self::TYPE_TIME:
-					list($clean, $error) = $this->validateTime($value, $field->required);
+					list($clean, $error) = $this->validateTime($value, $field['required']);
 					break;
 
 				case self::TYPE_IP:
-					list($clean, $error) = $this->validateIP($value, $field->required);
+					list($clean, $error) = $this->validateIP($value, $field['required']);
 					break;
 
 				case self::TYPE_EMAIL:
@@ -200,22 +201,22 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 			}
 
 			if( !$error ) {
-				if( isset($field->min) && ($clean < $field->min) )
+				if( isset($field['min']) && ($clean < $field['min']) )
 					$error = self::ERROR_MIN;
 
-				elseif( isset($field->max) && ($clean > $field->max) )
+				elseif( isset($field['max']) && ($clean > $field['max']) )
 					$error = self::ERROR_MAX;
 
-				elseif( isset($field->min_length) && (mb_strlen($clean) > 0) && (mb_strlen($clean) < $field->min_length) )
+				elseif( isset($field['min_length']) && (mb_strlen($clean) > 0) && (mb_strlen($clean) < $field['min_length']) )
 					$error = self::ERROR_TOO_SHORT;
 
-				elseif( isset($field->max_length) && (mb_strlen($value) > $field->max_length) )
+				elseif( isset($field['max_length']) && (mb_strlen($value) > $field['max_length']) )
 					$error = self::ERROR_TOO_LONG;
 
-				elseif( isset($field->regex) && !preg_match($field->regex, $clean) )
+				elseif( isset($field['regex']) && !preg_match($field['regex'], $clean) )
 					$error = self::ERROR_REGEX;
 
-				elseif( isset($field->values) && !in_array($clean, $field->values) )
+				elseif( isset($field['values']) && !in_array($clean, $field['values']) )
 					$error = self::ERROR_VALUE;
 			}
 			
