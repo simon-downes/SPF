@@ -156,13 +156,13 @@ abstract class Entity extends \spf\core\CustomObject {
 		if( $field === null ) {
 			$dirty = array();
 			foreach( $this->_updated as $k => $v ) {
-				if( !array_key_exists($k, $this->_data) || ($v != $this->_data[$k]) )
+				if( !array_key_exists($k, $this->_data) || (is_scalar($v) != is_scalar($this->_data[$k])) || ($v != $this->_data[$k]) )
 					$dirty[] = $k;
 			}
 			return $dirty;
 		}
 		elseif( array_key_exists($field, $this->_updated) ) {
-			return !array_key_exists($field, $this->_data) || ($this->_updated[$field] != $this->_data[$field]);
+			return !array_key_exists($field, $this->_data) || (is_scalar($this->_updated[$field]) != is_scalar($this->_data[$k])) || ($this->_updated[$field] != $this->_data[$field]);
 		}
 		else {
 			return false;
