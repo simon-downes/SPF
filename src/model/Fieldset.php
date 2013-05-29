@@ -38,6 +38,7 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 	// miscellaneous types
 	const TYPE_ENUM     = 'enum';
+	const TYPE_JSON     = 'json';
 	const TYPE_CUSTOM   = 'custom';
 
 	// errors
@@ -186,6 +187,10 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 					list($clean, $error) = $this->validateURL($value);
 					break;
 
+				case self::TYPE_JSON:
+					list($clean, $error) = $this->validateJSON($value);
+					break;
+
 				case self::TYPE_TEXT:
 					$clean = trim((string) $value);
 					break;
@@ -281,6 +286,7 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 			case self::TYPE_TEXT:
 			case self::TYPE_EMAIL:
 			case self::TYPE_URL:
+			case self::TYPE_JSON:
 			case self::TYPE_BINARY:
 				$empty = '';
 				break;
@@ -437,6 +443,24 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	 */
 	protected function validateTime( $value, $required ) {
 		return $this->validateDateTime($value, $required, 'H:i:s', '00:00:00');
+	}
+
+	protected function validateJSON( $value ) {
+
+		$error = self::ERROR_NONE;
+
+		// if it's a string then see if it's a valid json string
+		if( is_string($value) ) {
+			$decoded = json_decode($value, true);
+			if( $decoded !== null )
+				$value = $decoded;
+		}
+		elseif( is_resource($value) ) {
+			$error = self::ERROR_TYPE;
+		}
+
+		return array($value, $error);
+
 	}
 
 }

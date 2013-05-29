@@ -129,7 +129,10 @@ abstract class DataMapper {
 	 * @return mixed
 	 */
 	public function getDbFieldValue( $field, $entity ) {
-		return $entity->$field;
+		if( isset($this->fields->$field) && ($this->fields->$field->type == Fieldset::TYPE_JSON) )
+			return json_encode($entity->$field);
+		else
+			return $entity->$field;
 	}
 
 	/**
