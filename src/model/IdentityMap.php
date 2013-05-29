@@ -18,7 +18,17 @@ namespace spf\model;
 class IdentityMap extends \spf\core\Collection {
 
 	public function __construct() {
+		// always initialise empty
 		parent::__construct();
+	}
+
+	public function status() {
+		$status = array();
+		foreach( $this->store as $k => $v ) {
+			$status[$k] = var_info($v);
+		}
+		ksort($status);
+		return $status;
 	}
 
 }
