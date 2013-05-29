@@ -248,7 +248,7 @@ class Filter {
 		$db_table = $mapper->getDbTable();
 
 		$sql = strtr(
-			"{prefix}\nFROM `{table}` AS {alias}\n{joins}\n{where}\n{orderby}\n{limit}",
+			"{prefix}\nFROM `{table}` AS {alias}\n{joins}\n{where}\n{groupby}\n{orderby}\n{limit}",
 			array(
 				'{prefix}'  => $prefix,
 				'{field}'   => $mapper->getDbFieldName('id'),
@@ -256,6 +256,7 @@ class Filter {
 				'{alias}'   => $mapper->getTableAlias($db_table),
 				'{joins}'   => $query['joins'],
 				'{where}'   => $query['where'],
+				'{groupby}' => $query['groupby'],
 				'{orderby}' => $query['orderby'],
 				'{limit}'   => $query['limit'],
 			)
@@ -272,6 +273,7 @@ class Filter {
 			'where'   => '',
 			'joins'   => '',
 			'orderby' => '',
+			'groupby' => '',
 			'limit'   => '',
 			'params'  => array(),
 		);
