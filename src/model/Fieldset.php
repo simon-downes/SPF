@@ -346,17 +346,19 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 		$error = self::ERROR_NONE;
 
-		// if integer then convert to string
-		$ip = filter_var($value, FILTER_VALIDATE_INT);
-		if( $ip !== false )
-			$value = long2ip($ip);
+		if( $value ) {
+			// if integer then convert to string
+			$ip = filter_var($value, FILTER_VALIDATE_INT);
+			if( $ip !== false )
+				$value = long2ip($ip);
 
-		$value = filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
+			$value = filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
 
-		if( $value === false )
-			$error = self::ERROR_TYPE;
+			if( $value === false )
+				$error = self::ERROR_TYPE;
+		}
 
-		if( ($value == '0.0.0.0') && $required )
+		if( $required && (!$value || ($value == '0.0.0.0')) )
 			$error = self::ERROR_REQUIRED;
 
 		return array($value, $error);
