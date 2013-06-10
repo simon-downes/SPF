@@ -162,7 +162,7 @@ abstract class Entity extends \spf\core\CustomObject {
 			return $dirty;
 		}
 		elseif( array_key_exists($field, $this->_updated) ) {
-			return !array_key_exists($field, $this->_data) || (is_scalar($this->_updated[$field]) != is_scalar($this->_data[$k])) || ($this->_updated[$field] != $this->_data[$field]);
+			return !array_key_exists($field, $this->_data) || (is_scalar($this->_updated[$field]) != is_scalar($this->_data[$field])) || ($this->_updated[$field] != $this->_data[$field]);
 		}
 		else {
 			return false;
