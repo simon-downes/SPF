@@ -292,7 +292,7 @@ abstract class Entity extends \spf\core\CustomObject {
 		// just do the assignment
 		else {
 			// arrays are converted to spf\core\Object
-			$value = is_array($value) ? new parent($value) : $value;
+			//$value = is_array($value) ? new parent($value) : $value;
 			$this->_updated[$key] = $value;
 		}
 
