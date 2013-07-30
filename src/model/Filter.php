@@ -136,7 +136,34 @@ class Filter {
 		return $this->addCriteria($field, 'IN', $value);
 
 	}
-	
+
+	/**
+	 * $field must not equal one of the items in $values.
+	 * @param  string         $field     name of the field
+	 * @param  array          $value     values to exclude
+	 * @param  boolean|null   $numeric   are values numeric?
+	 * @return self
+	 */
+	public function notIn( $field, array $value, $numeric = null ) {
+
+		// if numeric flag wasn't specified then detected it
+		// by checking all items in the array are numeric
+		if( $numeric == null ) {
+			$numeric = count(array_filter($value, 'is_numeric')) == count($value);
+		}
+
+		if( $numeric )
+			$value = implode(', ', $value);
+		else
+			$value = '"'. implode('", "', $value). '"';
+
+		if( !$value )
+			$value = "''";
+
+		return $this->addCriteria($field, 'NOT IN', $value);
+
+	}
+
 	/**
 	 * Specify a field to order the results by.
 	 * Multiple levels of ordering can be specified by calling this method multiple times.
