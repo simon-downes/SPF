@@ -301,20 +301,17 @@ function remove_accents( $str ) {
  * @return string   the converted string.
  */
 function utf8_latin1( $str ) {
-	
-	/*
-	Example: I want to turn text like
-
-hello é β 水
-
-into
-
-hello é &#946; &#27700;
+	/* Example: I want to turn text like
+		hello é β 水
+		into
+		hello é &#946; &#27700;
 	*/
-	
-	$convmap= array(0x0100, 0xFFFF, 0, 0xFFFF);
-	$encutf= mb_encode_numericentity($utf, $convmap, 'UTF-8');
-	$iso= utf8_decode($encutf);
+	if( is_string($str) ) {
+		$convmap= array(0x0100, 0xFFFF, 0, 0xFFFF);
+		$encutf= mb_encode_numericentity($str, $convmap, 'UTF-8');
+		$str =  utf8_decode($encutf);
+	}
+	return $str;
 }
 
 /**
@@ -324,7 +321,11 @@ hello é &#946; &#27700;
  * @return string   the converted string.
  */
 function latin1_utf8( $str ) {
-
+	if( is_string($str) ) {
+		$str = mb_convert_encoding($str, 'UTF-8', 'ISO-8859-1');
+		$str = html_entity_decode($str, ENT_NOQUOTES, 'UTF-8');
+	}
+	return $str;
 }
 
 /**
