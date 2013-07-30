@@ -17,7 +17,14 @@ namespace spf\model;
  * which are either loaded from an IdentityMap or from a DataMapper
  */
 abstract class Repository {
-	
+
+	/**
+	 * Controls how long (in seconds) entities will persist in the cache (if one is available).
+	 * This value maybe overridden by subclasses.
+	 * @var integer
+	 */
+	const CACHE_EXPIRY = 60;
+
 	/**
 	 * Database.
 	 * @var \spf\data\Database

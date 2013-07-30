@@ -16,7 +16,15 @@ namespace spf\model;
  * Kinda like active record.
  */
 class GenericMapper extends DataMapper {
-	
+
+	/**
+	 * The maximum number of items that can be fetched in a single call to fetch().
+	 * If the specified number of items exceeds this number an exception will be thrown.
+	 * This value maybe overridden by subclasses.
+	 * @var integer
+	 */
+	const FETCH_LIMIT = 1000;
+
 	protected $fieldlist;
 	
 	public function create( $data = array() ) {
@@ -36,7 +44,7 @@ class GenericMapper extends DataMapper {
 		$sql = strtr(
 			"SELECT {fields} FROM `{table}` WHERE `{field}` IN ({ids})",
 			array(
-				'{fields}' => $this->getSelectList(),,
+				'{fields}' => $this->getSelectList(),
 				'{table}'  => $this->db_table,
 				'{field}'  => $this->getDbFieldName('id'),
 				'{ids}'    => implode(', ', array_keys($entities)),

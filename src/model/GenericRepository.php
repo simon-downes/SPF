@@ -48,8 +48,8 @@ class GenericRepository extends Repository {
 
 	}
 	
-	public function fetch( $ids ) {
-		return $this->genericFetch($ids, $this->mapper);
+	public function fetch( $ids, $force = false ) {
+		return $this->genericFetch($ids, $this->mapper, $force);
 	}
 	
 	public function save( $entity ) {
@@ -70,7 +70,7 @@ class GenericRepository extends Repository {
 	 * @param  \spf\model\DataMapper   $mapper.
 	 * @return array
 	 */
-	protected function genericFetch( $ids, $mapper ) {
+	protected function genericFetch( $ids, $mapper, $force = false ) {
 	
 		if( !($entities = $mapper->makeEntityList($ids)) )
 			return array();
