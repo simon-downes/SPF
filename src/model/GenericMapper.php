@@ -73,7 +73,7 @@ class GenericMapper extends DataMapper {
 
 		list($sql, $params) = $this->buildAssignmentList(
 			$entity,
-			array_keys($this->fields),
+			$this->fields->listNames(),
 			$entity->hasId() ? array() : array('id')
 		);
 
