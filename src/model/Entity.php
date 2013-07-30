@@ -17,7 +17,7 @@ namespace spf\model;
  * via a Fieldset object, enforce datatypes on properties and determine if a value has changed.
  * The property 'id' is immutable once set (i.e. it can only be set once).
  */
-abstract class Entity extends \spf\core\CustomObject {
+abstract class Entity extends \spf\core\CustomObject implements \Serializable {
 
 	protected $_updated;	// array of updated values
 
@@ -138,11 +138,7 @@ abstract class Entity extends \spf\core\CustomObject {
 		$this->_updated = array();
 		$this->_errors  = array();
 		// remove all keys that aren't specified in the entity's fieldset
-		$fields = static::getFields();
-		foreach( array_keys($this->_data) as $k )	 {
-			if( !isset($fields->$k) )
-				unset($this->_data[$k]);
-		}
+		$this->_data = array_intersect_key($this->_data, static::getFields()->toArray());
 		return $this;
 	}
 
@@ -327,6 +323,45 @@ abstract class Entity extends \spf\core\CustomObject {
 		unset($this->_data[$key]);
 		unset($this->_updated[$key]);
 		unset($this->_errors[$key]);
+	}
+
+	/**
+	 * Construct a string representation of the entity.
+	 * By default we only serialise fields defined in the fieldset.
+	 * 
+	 * @return string
+	 */
+	public function serialize() {
+
+		$fields = static::getFields()->toArray();
+
+		return serialize(
+			array(
+				$this->_getters,
+				$this->_setters,
+				$this->_immutable,
+				array_intersect_key($this->_data, $fields),
+				array_intersect_key($this->_updated, $fields),
+				array_intersect_key($this->_errors, $fields),
+			)
+		);
+
+	}
+
+	/**
+	 * Construct an entity from a serialised representation.
+	 * 
+	 * @return self
+	 */
+	public function unserialize( $data ) {
+		list(
+			$this->_getters,
+			$this->_setters,
+			$this->_immutable,
+			$this->_data,
+			$this->_updated,
+			$this->_errors
+		) = unserialize($data);
 	}
 
 }
