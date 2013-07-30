@@ -39,7 +39,29 @@ class Twig extends \spf\view\View {
 		}
 		
 	}
-	
+
+	public function setPaths( $paths ) {
+		$this->twig->getLoader()->setPaths($paths);
+		return $this;
+	}
+
+	public function addPath( $path ) {
+		$this->twig->getLoader()->addPath($path);
+		return $this;
+	}
+
+	public function getPaths() {
+		return $this->twig->getLoader()->getPaths();
+	}
+
+	public function exists( $view ) {
+		foreach( $this->getPaths() as $path ) {
+			if( file_exists("{$path}/{$view}.{$this->file_extension}") )
+				return true;
+		}
+		return false;
+	}
+
 	public function render( $view, $data = null ) {
 
 		if( $data === null )
