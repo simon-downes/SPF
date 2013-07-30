@@ -145,13 +145,10 @@ class GenericMapper extends DataMapper {
 
 			$field = $this->fields->$field_name;
 
-			if( !$field )
+			// skip temporary property assignments and the the id field
+			if( !$field || ($field->name == 'id') )
 				continue;
 
-			// don't update the id field
-			if( $field->name == 'id' )
-				continue;
-			
 			if( $db_field = $this->getDbFieldName($field->name) ) {
 				// sql assignment clause and corresponding parameter value
 				$sql .= "`{$db_field}` = :{$field->name},\n";
