@@ -306,7 +306,8 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	 * @return array   an array containing the validated value and an error status.
 	 */
 	protected function validateInteger( $value ) {
-		$value = filter_var($value, FILTER_VALIDATE_INT);
+		// convert null, false and empty strings to zero
+		$value = $value ? filter_var($value, FILTER_VALIDATE_INT) : 0;
 		$error = ($value === false) ? self::ERROR_TYPE : self::ERROR_NONE;
 		return array($value, $error);
 	}
@@ -317,7 +318,8 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 	 * @return array   an array containing the validated value and an error status.
 	 */
 	protected function validateFloat( $value ) {
-		$value = filter_var($value, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND);
+		// convert null, false and empty strings to zero
+		$value = $value ? filter_var($value, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND) : 0;
 		$error = ($value === false) ? self::ERROR_TYPE : self::ERROR_NONE;
 		return array($value, $error);
 	}
