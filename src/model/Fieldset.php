@@ -101,6 +101,10 @@ class Fieldset extends \spf\core\Immutable implements \IteratorAggregate, \Count
 
 	}
 
+	public function listNames() {
+		return array_keys($this->_data);
+	}
+
 	/**
 	 * Validates an array of field names and values against the field definitions in this Fieldset.
 	 * The return value is an array containing an array of validated values, and an array of errors,

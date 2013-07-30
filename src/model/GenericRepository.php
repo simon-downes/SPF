@@ -12,7 +12,14 @@
 namespace spf\model;
 
 class GenericRepository extends Repository {
-	
+
+	/**
+	 * Controls how long (in seconds) entities will persist in the cache (if one is available).
+	 * This value maybe overridden by subclasses.
+	 * @var integer
+	 */
+	const CACHE_EXPIRY = 60;
+
 	public function count( $filter = null ) {
 
 		if( $filter === null )
@@ -65,34 +72,48 @@ class GenericRepository extends Repository {
 	 */
 	protected function genericFetch( $ids, $mapper ) {
 	
-		if( !is_array($ids) )
-			$ids = array($ids);
-		
-		if( empty($ids) )
+		if( !($entities = $mapper->makeEntityList($ids)) )
 			return array();
-		
-		// make sure we have an array of unique integers
-		$ids = array_unique(array_map('intval', $ids));
 
 		$class = $mapper->getEntityClass();
 
-		// placeholder array listing entities in the desired order
-		$entities = array_fill_keys($ids, null);
-		$to_load  = array();
+		$keys    = array();		// map key for each id
+		$pending = $entities;	// list of entities that haven't been fetched yet
 
-		// fetch entities from the identity map where possible and note those that aren't there
-		foreach( $ids as $id ) {
-			$entities[$id] = $this->map->get($class::getMapId($id));
-			if( !$entities[$id] )
-				$to_load[] = $id;
+		// if the entity was in the map then remove it from the pending list
+		foreach( array_keys($entities) as $id ) {
+			$keys[$id]    = $class::getMapId($id);
+			$pending[$id] = $keys[$id];
+			if( $entities[$id] = $this->map->get($keys[$id]) )
+				unset($pending[$id]);
 		}
-		
-		// fetch the missing entities and store them in the identity map
-		foreach( $mapper->fetch($to_load) as $entity ) {
-			$entities[$entity->id] = $entity;
-			$this->map->set($class::getMapId($entity->id), $entity);
+
+		// ooh, we have a cache available, let's check it!
+		if( $pending && $this->cache ) {
+
+			$this->profiler && $this->profiler->start('Entity Cache');
+
+			foreach( $this->cache->multiRead(array_values($pending)) as $key => $entity ) {
+				if( $entity ) {
+					$entities[$entity->id] = $entity;
+					unset($pending[$entity->id]);
+					$this->map->set($key, $entity);
+				}
+			}
+
+			$this->profiler && $this->profiler->stop('Entity Cache');
+
 		}
-		
+
+		// fetch the missing entities and store them in the identity map - and the cache if we have one and the entity isn't already cached
+		if( $pending ) {
+			foreach( $mapper->fetch(array_keys($pending), $force) as $entity ) {
+				$entities[$entity->id] = $entity;
+				$this->map->set($keys[$entity->id], $entity);
+				$this->cache && $this->cache->write($keys[$entity->id], $entity, static::CACHE_EXPIRY);
+			}
+		}
+
 		return $entities;
 		
 	}
@@ -113,13 +134,14 @@ class GenericRepository extends Repository {
 			$success = $mapper->update($entity);
 		else
 			$success = $mapper->insert($entity);
-		
+
 		$key = $mapper->getEntityClass();
 		$key = $key::getMapId($entity->id);
-		
-		if( !$this->map->has($key) )
-			$this->map->set($key, $entity);
-		
+
+		$this->map->set($key, $entity);
+
+		$this->cache && $this->cache->write($key, $entity, static::CACHE_EXPIRY);
+
 		return $success;
 		
 	}
@@ -135,16 +157,18 @@ class GenericRepository extends Repository {
 	 * @return boolean
 	 */
 	protected function genericDelete( $id, $mapper ) {
-		
+
 		$key = $mapper->getEntityClass();
 		$key = ($id instanceof $key) ? $key::getMapId($id->id) : $key::getMapId((int) $id);
-		
+
 		$success = $mapper->delete($id);
-		
+
 		$this->map->remove($key);
-		
+
+		$this->cache && $this->cache->delete($key);
+
 		return $success;
-		
+
 	}
 
 }

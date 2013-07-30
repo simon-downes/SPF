@@ -119,7 +119,7 @@ abstract class DataMapper {
 	 * @return string
 	 */
 	public function getDbFieldName( $field ) {
-		return $field;
+		return isset($this->fields->$field) ? $field : '';
 	}
 
 	/**

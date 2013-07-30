@@ -186,6 +186,21 @@ function seconds( $str ) {
 }
 
 /**
+ * Convert a variable into an array of unique integers.
+ *
+ * @param  mixed   $var
+ * @return array
+ */
+function array_ints( $var ) {
+	return array_unique(
+		array_map(
+			'intval',
+			(array) $var
+		)
+	);
+}
+
+/**
  * Determine if an array is an associative array.
  * Taken from: http://stackoverflow.com/questions/173400/php-arrays-a-good-way-to-check-if-an-array-is-associative-or-numeric/4254008#4254008
  *

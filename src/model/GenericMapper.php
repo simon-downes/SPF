@@ -26,43 +26,23 @@ class GenericMapper extends DataMapper {
 		return $entity;
 	}
 	
-	public function fetch( $ids ) {
-	
-		if( !is_array($ids) )
-			$ids = array($ids);
-		
-		if( empty($ids) )
-			return array();
-		
-		// make sure we have an array of unique integers
-		$ids = array_unique(array_map('intval', $ids));
+	public function fetch( $ids, $force = false ) {
 
-		if( !$this->fieldlist ) {
-			$this->fieldlist = '';
-			foreach( $this->fields as $field ) {
-				if( $db_field = $this->getDbFieldName($field->name) ) {
-					if( $db_field == $field->name )
-						$this->fieldlist .= "`{$db_field}`, ";
-					else
-						$this->fieldlist .= "`{$db_field}` AS `{$field->name}`, ";
-				}
-			}
-			$this->fieldlist = substr($this->fieldlist, 0, -2);
-		}
+		if( !($entities = $this->makeEntityList($ids)) )
+			return array();
+		elseif( !$force && (count($entities) > static::FETCH_LIMIT) )
+			throw new Exception(sprintf('Item count of %d exceeds fetch limit of %s', count($entities), static::FETCH_LIMIT));
 
 		$sql = strtr(
 			"SELECT {fields} FROM `{table}` WHERE `{field}` IN ({ids})",
 			array(
-				'{fields}' => $this->fieldlist,
+				'{fields}' => $this->getSelectList(),,
 				'{table}'  => $this->db_table,
 				'{field}'  => $this->getDbFieldName('id'),
-				'{ids}'    => implode(', ', $ids),
+				'{ids}'    => implode(', ', array_keys($entities)),
 			)
 		);
 
-		// placeholder array listing entities in the desired order
-		$entities = array_fill_keys($ids, null);
-		
 		foreach( $this->db->getAll($sql) as $item ) {
 			$entity = $this->create($item);
 			$entities[$entity->id] = $entity;
@@ -75,30 +55,19 @@ class GenericMapper extends DataMapper {
 	
 	public function insert( $entity ) {
 		
-		\spf\assert_instance($entity,$this->entity_class);
+		\spf\assert_instance($entity, $this->entity_class);
 
 		if( $entity->getErrors() )
-			throw new \spf\model\Exception("Can't insert, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));
+			throw new Exception("Can't insert, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));
 		
-		if( $entity->original('id') )
+		elseif( $entity->original('id') )
 			throw new Exception('Can\'t insert, entity already has an id');
-		
-		$sql    = '';
-		$params = array();
 
-		foreach( $this->fields as $field ) {
-			
-			// don't insert the id field if it's not specified
-			if( $field->name == 'id' && !$entity->id )
-				continue;
-			
-			if( $db_field = $this->getDbFieldName($field->name) ) {
-				// sql assignment clause and corresponding parameter value
-				$sql .= "`{$db_field}` = :{$field->name},\n";
-				$params[$field->name] = $this->getDbFieldValue($field->name, $entity);
-			}
-			
-		}
+		list($sql, $params) = $this->buildAssignmentList(
+			$entity,
+			array_keys($this->fields),
+			$entity->hasId() ? array() : array('id')
+		);
 
 		($before = $this->beforeInsert($entity, $sql, $params)) && (list($sql, $params) = $before);
 
@@ -128,34 +97,20 @@ class GenericMapper extends DataMapper {
 	}
 	
 	public function update( $entity ) {
-	
-		\spf\assert_instance($entity,$this->entity_class);
+
+		\spf\assert_instance($entity, $this->entity_class);
 
 		if( $entity->getErrors() )
-			throw new \spf\model\Exception("Can't update, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));
-		
-		if( !$entity->id )
+			throw new Exception("Can't update, {$this->entity_class} has errors: ". var_export($entity->getErrors(), true));
+
+		elseif( !$entity->hasId() )
 			throw new Exception('Can\'t update, entity has no id');
-		
-		$sql    = '';
-		$params = array();
-		
-		// loop through all the modified fields
-		foreach( $entity->isDirty() as $field_name ) {
 
-			$field = $this->fields->$field_name;
-
-			// skip temporary property assignments and the the id field
-			if( !$field || ($field->name == 'id') )
-				continue;
-
-			if( $db_field = $this->getDbFieldName($field->name) ) {
-				// sql assignment clause and corresponding parameter value
-				$sql .= "`{$db_field}` = :{$field->name},\n";
-				$params[$field->name] = $this->getDbFieldValue($field->name, $entity);
-			}
-			
-		}
+		list($sql, $params) = $this->buildAssignmentList(
+			$entity,
+			$entity->isDirty(),
+			array('id')
+		);
 
 		($before = $this->beforeUpdate($entity, $sql, $params)) && (list($sql, $params) = $before);
 
@@ -184,18 +139,24 @@ class GenericMapper extends DataMapper {
 	}
 	
 	public function delete( $id ) {
-		
+
 		if( $id instanceof $this->entity_class )
 			$id = $id->id;
-			
+	
 		if( !(int) $id )
 			throw new \InvalidArgumentException('Can\'t delete, no id given');
-		
+
 		$sql = sprintf("DELETE FROM `%s` WHERE `%s` = ?", $this->db_table, $this->getDbFieldName('id'));
-		$success = $this->db->execute($sql, (int) $id);
 		
-		return (bool) $success;
-		
+		return (bool) $this->db->execute($sql, (int) $id);
+
+	}
+
+	public function makeEntityList( $ids ) {
+		return array_fill_keys(
+			\spf\array_ints($ids),
+			null
+		);
 	}
 
 	/**
@@ -244,6 +205,58 @@ class GenericMapper extends DataMapper {
 	 * @return void
 	 */
 	protected function afterUpdate( $entity ) {
+	}
+
+	/**
+	 * Returns the field list part of the select query used by fetch().
+	 *
+	 * @return string
+	 */
+	protected function getSelectList() {
+
+		if( !$this->fieldlist ) {
+			foreach( $this->fields as $field ) {
+				if( $db_field = $this->getDbFieldName($field->name) ) {
+					if( $db_field == $field->name )
+						$this->fieldlist .= "`{$db_field}`, ";
+					else
+						$this->fieldlist .= "`{$db_field}` AS `{$field->name}`, ";
+				}
+			}
+			$this->fieldlist = substr($this->fieldlist, 0, -2);
+		}
+
+		return $this->fieldlist;
+
+	}
+
+	/**
+	 * Returns an array containing the field list part of the queries used by
+	 * insert() and update(), and the associated parameter values.
+	 *
+	 * @param  \yolk\model\Entity $entity   the entity to be saved.
+	 * @param  array              $fields   array of field names being modified.
+	 * @param  array              $skip     array of field names to skip over.
+	 * @return array
+	 */
+	protected function buildAssignmentList( $entity, $fields, $skip = array() ) {
+
+		$sql    = '';
+		$params = array();
+
+		foreach( $fields as $field ) {
+			// build sql assignment clause and corresponding parameter value for defined fields and those not in the skip list
+			if( !in_array($field, $skip) && ($db_field = $this->getDbFieldName($field)) ) {
+				$sql .= "`{$db_field}` = :{$field},\n";
+				$params[$field] = $this->getDbFieldValue($field, $entity);
+			}
+		}
+
+		return array(
+			$sql,
+			$params
+		);
+
 	}
 
 }
