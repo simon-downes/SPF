@@ -103,6 +103,15 @@ abstract class Repository {
 	}
 
 	/**
+	 * Return the primary DataMapper used by the Repository.
+	 *
+	 * @return  \yolk\model\DataMaper
+	 */
+	public function getMapper() {
+		return $this->mapper;
+	}
+
+	/**
 	 * Return a new filter object for this repository.
 	 *
 	 * @return  \spf\model\Filter
