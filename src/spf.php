@@ -237,6 +237,61 @@ function implode_assoc( $var, $glue_outer = ',', $glue_inner = '=', $skip_empty 
 }
 
 /**
+ * Create a comparison function for sorting multi-dimensional arrays.
+ * http://stackoverflow.com/questions/96759/how-do-i-sort-a-multidimensional-array-in-php/16788610#16788610
+ *
+ * Each parameter to this function is a criteria and can either be a string
+ * representing a column to sort or a numerically indexed array containing:
+ * 0 => the column name to sort on (mandatory)
+ * 1 => either SORT_ASC or SORT_DESC (optional)
+ * 2 => a projection function (optional)
+ * 
+ * The return value is a function that can be passed to usort() or uasort().
+ *
+ * @return function
+ */
+function make_comparer() {
+
+	// normalize criteria up front so that the comparer finds everything tidy
+	$criteria = func_get_args();
+	foreach( $criteria as $index => $criterion ) {
+		$criteria[$index] = is_array($criterion)
+			? array_pad($criterion, 3, null)
+			: array($criterion, SORT_ASC, null);
+	}
+
+	return function( $first, $second ) use ($criteria) {
+		foreach( $criteria as $criterion ) {
+
+			// how will we compare this round?
+			list($column, $sort_order, $projection) = $criterion;
+			$sort_order = $sort_order === SORT_DESC ? -1 : 1;
+
+			// if a projection was defined project the values now
+			if( $projection ) {
+				$lhs = call_user_func($projection, $first[$column]);
+				$rhs = call_user_func($projection, $second[$column]);
+			}
+			else {
+				$lhs = $first[$column];
+				$rhs = $second[$column];
+			}
+
+			// do the actual comparison; do not return if equal, move on to the next column
+			if( $lhs < $rhs ) {
+				return -1 * $sort_order;
+			}
+			else if ($lhs > $rhs) {
+				return 1 * $sort_order;
+			}
+
+		}
+		return 0; // all sortable columns contain the same values, so $first == $second
+	};
+
+}
+
+/**
  * Convert a string into a format safe for use in urls.
  * Converts any accent characters to their equivalent normal characters
  * and then any sequence of two or more non-alphanumeric characters to a dash.
