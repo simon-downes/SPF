@@ -118,20 +118,23 @@ class Filter {
 	 * @return self
 	 */
 	public function in( $field, array $value, $numeric = null ) {
-		
+
 		// if numeric flag wasn't specified then detected it
 		// by checking all items in the array are numeric
 		if( $numeric == null ) {
 			$numeric = count(array_filter($value, 'is_numeric')) == count($value);
 		}
-		
+
 		if( $numeric )
 			$value = implode(', ', $value);
 		else
 			$value = '"'. implode('", "', $value). '"';
-			
+
+		if( !$value )
+			$value = "''";
+
 		return $this->addCriteria($field, 'IN', $value);
-		
+
 	}
 	
 	/**
