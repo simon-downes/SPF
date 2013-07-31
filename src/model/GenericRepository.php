@@ -13,13 +13,6 @@ namespace spf\model;
 
 class GenericRepository extends Repository {
 
-	/**
-	 * Controls how long (in seconds) entities will persist in the cache (if one is available).
-	 * This value maybe overridden by subclasses.
-	 * @var integer
-	 */
-	const CACHE_EXPIRY = 60;
-
 	public function count( $filter = null ) {
 
 		if( $filter === null )

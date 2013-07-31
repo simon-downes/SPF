@@ -175,10 +175,22 @@ abstract class Repository {
 
 		$entity = $this->map->get($key);
 
+		if( !$entity && $this->cache ) {
+
+			$this->profiler && $this->profiler->start('Entity Cache');
+
+			if( $entity = $this->cache->read($key) )
+				$this->map->set($key, $entity);
+
+			$this->profiler && $this->profiler->stop('Entity Cache');
+
+		}
+
 		if( !$entity ) {
 			if( $items = $this->fetch($id) ) {
 				$entity = reset($items);
 				$this->map->set($key, $entity);
+				$this->cache && $this->cache->write($key, $entity, static::CACHE_EXPIRY);
 			}
 			else {
 				$entity	= false;
