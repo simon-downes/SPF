@@ -112,7 +112,7 @@ abstract class Repository {
 	/**
 	 * Return the primary DataMapper used by the Repository.
 	 *
-	 * @return  \yolk\model\DataMaper
+	 * @return  \spf\model\DataMaper
 	 */
 	public function getMapper() {
 		return $this->mapper;

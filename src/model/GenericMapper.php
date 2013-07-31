@@ -242,7 +242,7 @@ class GenericMapper extends DataMapper {
 	 * Returns an array containing the field list part of the queries used by
 	 * insert() and update(), and the associated parameter values.
 	 *
-	 * @param  \yolk\model\Entity $entity   the entity to be saved.
+	 * @param  \spf\model\Entity $entity   the entity to be saved.
 	 * @param  array              $fields   array of field names being modified.
 	 * @param  array              $skip     array of field names to skip over.
 	 * @return array

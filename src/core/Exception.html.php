@@ -142,11 +142,10 @@ else {
       <li class="panel">
          <?php
          	if( isset($item['file']) ) {
-         		//$item['file'] = defined('YOLK_APP_PATH') ? str_replace(YOLK_APP_PATH. '/', '', $item['file']) : $item['file'];?>
+         		//$item['file'] = defined('SPF_APP_PATH') ? str_replace(SPF_APP_PATH. '/', '', $item['file']) : $item['file'];?>
          <p>
          	<strong>File:</strong> <code><?=$item['file']; ?></code>
-         	<?php if( isset($item['line']) ) { ?> &nbsp;&nbsp;&nbsp;<strong>Line:</strong> <code><?=$item['line'] ?></code>
-			<?php } ?>
+         	<?php if( isset($item['line']) ) { ?> &nbsp;&nbsp;&nbsp;<strong>Line:</strong> <code><?=$item['line'] ?></code><?php } ?>
          </p>
          <?php } ?>
          <p><strong>Function: </strong><code><?=isset($item['class']) ? $item['class']. $item['type'] : ''?><?=$item['function']. '()'; ?></code></p>

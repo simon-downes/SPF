@@ -35,12 +35,11 @@ abstract class Entity extends \spf\core\CustomObject implements \Serializable {
 	 * @return \spf\model\Fieldset
 	 */
 	public static function getFields( $fieldset = null ) {
-		
+
 		if( !$fieldset )
 			$fieldset = new Fieldset();
-		
 		else
-			\spf\assert_instance($fieldset, '\\yolk\\model\\Fieldset');
+			\spf\assert_instance($fieldset, '\\spf\\model\\Fieldset');
 
 		return $fieldset;
 
