@@ -11,6 +11,9 @@
 
 namespace spf\storage\cache;
 
+/**
+ * Base caching exception class.
+ */
 class Exception extends \spf\storage\Exception {}
 
 // EOF

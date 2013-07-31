@@ -11,6 +11,9 @@
 
 namespace spf\storage;
 
+/**
+ * Base storage exception class.
+ */
 class Exception extends \spf\core\Exception {}
 
 // EOF

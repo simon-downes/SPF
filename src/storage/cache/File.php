@@ -13,19 +13,11 @@ namespace spf\storage\cache;
 
 class File extends \spf\storage\Cache {
 
+	/**
+	 * Directory where file are stored.
+	 * @var string
+	 */
 	protected $directory;
-
-	public function __construct( $directory ) {
-
-		if( !file_exists($directory) )
-			throw new Exception("Cache directory '{$directory}' doesn't exist");
-
-		if( !is_writable($directory) )
-			throw new Exception("Cache directory '{$directory}' is not writeable");
-
-		$this->directory = $directory;
-
-	}
 
 	public function read( $key ) {
 
@@ -37,10 +29,13 @@ class File extends \spf\storage\Cache {
 			$data = file_get_contents($key) ;
 			$expiry = strtotime(substr($data, 0, 19));
 
-			if( time() < $expiry )
+			if( time() < $expiry ) {
 				$value = unserialize(substr($data, 19));
-			else
+			}
+			else {
 				unlink($key);
+				$this->removeFromIndex($key);
+			}
 
 		}
 
@@ -48,25 +43,25 @@ class File extends \spf\storage\Cache {
 
 	}
 
+	public function multiRead( $keys ) {
+		$values = array_fill_keys($keys, null);
+		foreach( $keys as $k ) {
+			$values[$k] = $this->read($k);
+		}
+		return $values;
+	}
+
 	public function write( $key, $value, $expiry = 0 ) {
 
-		$key   = $this->directory. '/'. $this->key($key);
-		$value = serialize($value);
+		$key    = $this->directory. '/'. $this->key($key);
+		$value  = serialize($value);
+		$expiry = $expiry ? $this->makeExpiry($expiry, true) : pow(2, 31);
 
-		if( !$expiry ) {
-			$ts = time() + 86400;
-		}
-		else {
-			$ts = filter_var($expiry, FILTER_VALIDATE_INT);
-			if( $ts === false )
-				$ts = strtotime($expiry);
-		}
+		file_put_contents($key, date('Y-m-d H:i:s', $ts). $value, LOCK_EX);
 
-		if( !$ts )
-			throw new Exception("Invalid Cache Expiry: {$expiry}");
+		$this->addToIndex($key, $expires);
 
-
-		return file_put_contents($key, date('Y-m-d H:i:s', $ts). $value, LOCK_EX);
+		return $this;
 
 	}
 
@@ -76,10 +71,11 @@ class File extends \spf\storage\Cache {
 
 		if( file_exists($key) ) {
 			unlink($key);
-			return true;
 		}
 
-		return false;
+		$this->removeFromIndex($key);
+
+		return $this;
 
 	}
 
@@ -88,7 +84,7 @@ class File extends \spf\storage\Cache {
 		$dh = opendir($this->directory);
 
 		while( ($item = readdir($dh)) !== false ) {
-			if( is_file($this->directory. '/'. $item) )
+			if( is_file($this->directory. '/'. $item) and preg_match(':^'. preg_quote($this->prefix). ':', $item) )
 				unlink($this->directory. '/'. $item);
 		}
 
@@ -96,11 +92,28 @@ class File extends \spf\storage\Cache {
 
 	}
 
+	protected function init() {
+
+		$this->config['path'] = $this->config['path'] ?: sys_get_temp_dir();
+
+		$this->directory = $this->config['path'];
+
+		if( !file_exists($this->directory) )
+			throw new Exception("Directory '{$this->directory}' doesn't exist");
+
+		elseif( !is_writable($this->directory) )
+			throw new Exception("Directory '{$this->directory}' is not writeable");
+
+		elseif( preg_match("/[\\/?*:;{}\\\\]+/", $this->prefix) )
+			$this->prefix = preg_replace("/[\\/?*:;{}\\\\]+/", '-', $this->prefix);
+
+	}
+
 	protected function key( $key ) {
-		if( preg_match("/[a-z0-9_\-+.$&*]+/i", $key) )
-			return $key;
+		if( preg_match("/[a-z0-9_\-\\.]+/i", $key) )
+			return $this->prefix. $key;
 		else
-			return sha1($key);
+			return $this->prefix. sha1($key);
 	}
 
 }

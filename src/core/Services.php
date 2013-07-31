@@ -162,6 +162,63 @@ class Services extends \Pimple {
 
 	}
 
+	public function cache( $config = array() ) {
+
+		// convert DSN string to connection details array
+		if( !is_array($config) ) {
+
+			$dsn = parse_url(urldecode($config));
+
+			if( !$dsn || !$dsn['scheme'] )
+				throw new Exception('Invalid DSN string');
+
+			$config = array(
+				'driver'  => isset($dsn['scheme']) ? $dsn['scheme'] : '',
+				'host'    => isset($dsn['host'])   ? $dsn['host']   : 'localhost',
+				'port'    => isset($dsn['port'])   ? $dsn['port']   : '',
+				'path'    => isset($dsn['path'])   ? $dsn['path']   : '',
+				'options' => array(),
+			);
+
+			if( isset($dsn['query']) )
+				parse_str($dsn['query'], $config['options']);
+
+		}
+		else {
+			$config = $config + array(
+				'driver'  => '',
+				'host'    => 'localhost',
+				'port'    => '',
+				'path'    => '',
+				'options' => array(),
+			);
+		}
+
+		switch( $config['driver'] ) {
+			case 'redis':
+			case 'memcache':
+			case 'memory':
+			case 'file':
+				$adapter = ucwords($config['driver']);
+				break;
+
+			default:
+				throw new Exception("Driver not supported: {$config['driver']}");
+		}
+
+		$class = "\\spf\\storage\\cache\\{$adapter}";
+		$cache = new $class($config);
+
+		// inject default services
+		// disable automatic query cache - it's too aggressive and has no invalidation
+		// isset($this['cache'])    && $db->setCache($this['cache']);
+		//isset($this['logger'])   && $db->setLogger($this['logger']);
+		//isset($this['profiler']) && $db->setProfiler($this['profiler']);
+
+		return $cache;
+
+	}
+
 	public function log( $source ) {
 
 		if( !preg_match('#^((tcp|udp)://|syslog|std(err|out)$|php$)#', $source, $m) )

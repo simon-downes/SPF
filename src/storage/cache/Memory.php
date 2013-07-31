@@ -11,33 +11,51 @@
 
 namespace spf\storage\cache;
 
+/**
+ * A simple array-based cache.
+ * Doesn't support item expiry.
+ */
 class Memory extends \spf\storage\Cache {
 
+	/**
+	 * Array used to store values.
+	 * @var array
+	 */
 	protected $store;
-
-	public function __construct() {
-		$this->store = array();
-	}
 
 	public function read( $key ) {
 		return isset($this->store[$key]) ? $this->store[$key] : null;
 	}
 
+	public function multiRead( $keys ) {
+		$values = array_fill_keys($keys, null);
+		foreach( $keys as $k ) {
+			$values[$k] = $this->read($k);
+		}
+		return $values;
+	}
+
 	public function write( $key, $value, $expires = null ) {
 		$this->store[$key] = $value;
-		return true;
+		$this->addToIndex($key, $expires);
+		return $this;
 	}
 
 	public function delete( $key ) {
 		unset($this->store[$key]);
-		return true;
+		$this->removeFromIndex($key);
+		return $this;
 	}
 
 	public function flush() {
 		$this->store = array();
-		return true;
+		return $this;
 	}
-   
+
+	protected function init() {
+		$this->store = array();
+	}
+
 }
 
 // EOF
