@@ -331,33 +331,54 @@ class Filter {
 
 		$table_alias = $mapper->getTableAlias($mapper->getDbTable());
 
-		foreach( $this->criteria as $field => $opval ) {
+		foreach( $this->criteria as $field => $criteria ) {
 
-			list($operator, $value) = $opval;
+			$criteria_count = count($criteria);
 
-			if( $operator == 'IN' ) {
-				$operand = "({$value})";
-				$value = null;
+			foreach( $criteria as $operator => $value ) {
+
+				// 'IN' operator doesn't have a corresponding parameter value
+				if( in_array($operator, array('IN', 'NOT IN')) ) {
+					$operand = "({$value})";
+				}
+				else {
+					$param = ($criteria_count == 1) ? $field : $this->getParameterName($field, $operator);
+					$operand = ":{$param}";
+					$query['params'][$param] = $value;
+				}
+
+				$query['where'] .= strtr(
+					"AND {table}.`{field}` {operator} {operand}\n",
+					array(
+						'{table}'    => $table_alias,
+						'{field}'    => $mapper->getDbFieldName($field),
+						'{operator}' => $operator,
+						'{operand}'  => $operand,
+					)
+				);
+
 			}
-			else {
-				$operand = ":{$field}";
-				$query['params'][$field] = $value;
-			}
-
-			$query['where'] .= strtr(
-				"AND {table}.`{field}` {operator} {operand}\n",
-				array(
-					'{table}'    => $table_alias,
-					'{field}'    => $mapper->getDbFieldName($field),
-					'{operator}' => $operator,
-					'{operand}'  => $operand,
-				)
-			);
 
 		}
-		
+
 		return $query;
 
+	}
+
+	protected function getParameterName( $field, $operator ) {
+		$suffixes = array(
+			'='    => 'eq',
+			'!='   => 'neq',
+			'<'    => 'max',
+			'<='   => 'max',
+			'>'    => 'min',
+			'>='   => 'min',
+			'LIKE' => 'like',
+		);
+		if( isset($suffixes[$operator]) )
+			return "{$field}_{$suffixes[$operator]}";
+		else
+			return $field;
 	}
 
 	protected function decodeOrderBy( $query, $mapper ) {
@@ -402,7 +423,9 @@ class Filter {
 	 */
 	protected function addCriteria( $field, $operator, $value ) {
 		$field = trim($field);
-		$this->criteria[$field] = array($operator, $value);
+		if( !isset($this->criteria[$field]) )
+			$this->criteria[$field] = array();
+		$this->criteria[$field][$operator] = $value;
 		return $this;
 	}
 
