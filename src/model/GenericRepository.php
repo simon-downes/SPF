@@ -52,7 +52,46 @@ class GenericRepository extends Repository {
 	public function delete( $id ) {
 		return $this->genericDelete($id, $this->mapper);
 	}
-	
+
+	/**
+	 * Register an EntityAttachment instance with the repository.
+	 * If the $name parameter is an array is is assumed to be an array of (name => attachment instances).
+	 * @param  string|array   $name   name by which the attachment can be referenced
+	 * @param  \spf\model\EntityAttachment   $attachment
+	 * @return self
+	 */
+	public function registerAttachment( $name, $attachment = null ) {
+
+		if( is_array($name) ) {
+			foreach( $name as $k => $v ) {
+				$this->registerAttachment($k, $v);
+			}
+		}
+		elseif( !($attachment instanceof EntityAttachment ) ) {
+				throw new \InvalidArgumentException(sprintf("\\%s expects \\spf\\models\\EntityAttachment, '%s' given", __METHOD__, \spf\var_info($attachment)));
+		}
+		else {
+			$this->attachments[$name] = $attachment;
+		}
+
+		return $this;
+
+	}
+
+	/**
+	 * Attach related items to an entity.
+	 * @param  string   $name   attachment to run
+	 * @param  array|\spf\model\Entity   $entities
+	 * @return self
+	 */
+	public function attach( $name, $entities ) {
+		if( isset($this->attachments[$name]) )
+			$this->attachments[$name]->attach($entities);
+		else
+			throw new \InvalidArgumentException("Attachment Not Found: {$name}");
+		return $this;
+	}
+
 	/**
 	 * Fetch a set of entities from the IdentityMap or the specified DataMapper.
 	 * This function provides a method for subclasses to fetch child Entities without
