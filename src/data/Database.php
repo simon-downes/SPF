@@ -295,6 +295,41 @@ abstract class Database {
 
 	}
 
+	/**
+	 * Perform a select query and return all matching rows as a multi-dimensional associative array.
+	 * The first column in the resultset is used as the key for each record, with each record being an array of rows
+	 * for that key.
+	 * @param  \PDOStatement|string $statement   an existing PDOStatement object or a SQL string.
+	 * @param  array $params   an array of parameters to pass into the query.
+	 * @param  integer $expires   number of seconds to cache the result for if caching is enabled
+	 * @return array
+	 */
+	public function getAssocMulti( $statement, $params = array(), $expires = 60 ) {
+
+		if( $this->cache ) {
+			$key = $this->getCacheKey($statement, $params);
+			if( ($result = $this->cache->read($key)) !== null )
+				return $result;
+		}
+
+		$statement = $this->query($statement, $params);
+
+		$rs = array();
+		while( $row = $statement->fetch() ) {
+			$k1 = array_shift($row);
+			$k2 = array_shift($row);
+			$v  = count($row) == 1 ? array_shift($row) : $row;
+			if( !isset($rs[$k1]) )
+				$rs[$k1] = array();
+			$rs[$k1][$k2] = $v;
+		}
+
+		$this->cache && $this->cache->write($key, $result, $expires);
+
+		return $rs;
+
+	}
+
 	// Perform a select query and return the first matching row.
 	public function getRow( $statement, $params = array(), $expires = 60 ) {
 
